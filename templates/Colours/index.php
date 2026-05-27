@@ -1,0 +1,52 @@
+<?php
+/**
+ * @var \App\View\AppView $this
+ * @var iterable<\App\Model\Entity\Colours> $colours
+ */
+echo $this->Html->css('/vendor/datatables/dataTables.bootstrap4.min.css', ['block' => true]);
+echo $this->Html->script("/vendor/datatables/jquery.dataTables.min.js", ['block' => true]);
+echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['block' => true]);
+?>
+<head>
+    <style>
+        table td, table th
+        {
+        max-width: 150px;
+        word-wrap: break-word;
+        }
+    </style>
+</head>
+<section>
+    <div class="colour index content">
+        <?= $this->Html->link(__('Add Colour'), ['action' => 'add'], ['class' => 'btn btn-dark btn-lg float-right']) ?>
+        <h3><?= __('Colours') ?></h3>
+        <div class="table">
+            <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+
+                        <th><?= h('Colour Name') ?></th>
+                        <th class="actions"><?= __('Actions') ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($colours as $colours): ?>
+                    <tr>
+
+                        <td><?= h($colours->name) ?></td>
+                        <td class="actions">
+                            <?= $this->Html->link(__('Edit'), ['action' => 'edit', $colours->id]) ?>
+                            <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $colours->id], ['confirm' => __('Are you sure you want to product delete colour: {0} from the system?', $colours->name)]) ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <script>
+            $(document).ready(function(){
+                $('#dataTable').DataTable();
+            })
+        </script>
+    </div>
+</section>
