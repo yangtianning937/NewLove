@@ -34,6 +34,26 @@ Run this command from the project root:
 DB_NAME=newLove DB_USER=newLove DB_PASS=password /opt/homebrew/opt/php@8.3/bin/php scripts/export_firestore_json.php
 ```
 
+## Firebase Project
+
+The matching Firebase project for this app is:
+
+```text
+newlove-yt-260528
+```
+
+The Firestore database uses Native mode in the `australia-southeast1` region.
+
+## Import Into Firestore
+
+Run this command from the project root after getting a Google OAuth access token:
+
+```bash
+FIREBASE_PROJECT_ID=newlove-yt-260528 FIREBASE_ACCESS_TOKEN=your_access_token /opt/homebrew/opt/php@8.3/bin/php scripts/import_firestore_json.php
+```
+
+The import script reads `firebase/firestore-data/manifest.json` and writes each JSON file into a Firestore collection with the same name.
+
 ## Suggested Firestore Collections
 
 - `users`
@@ -47,8 +67,6 @@ DB_NAME=newLove DB_USER=newLove DB_PASS=password /opt/homebrew/opt/php@8.3/bin/p
 - `materials_products`
 
 ## Recommended Next Step
-
-Create a Firebase project, enable Firestore, then import these JSON files with a Firebase Admin SDK script.
 
 After the data is in Firestore, migrate one module at a time. A safe order is:
 
