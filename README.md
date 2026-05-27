@@ -1,53 +1,114 @@
-# CakePHP Application Skeleton
+# NewLove
 
-![Build Status](https://github.com/cakephp/app/actions/workflows/ci.yml/badge.svg?branch=master)
-[![Total Downloads](https://img.shields.io/packagist/dt/cakephp/app.svg?style=flat-square)](https://packagist.org/packages/cakephp/app)
-[![PHPStan](https://img.shields.io/badge/PHPStan-level%207-brightgreen.svg?style=flat-square)](https://github.com/phpstan/phpstan)
+NewLove is a CakePHP web application for managing product materials, suppliers, and inventory information. It is designed as a student project and focuses on simple inventory management workflows.
 
-A skeleton for creating applications with [CakePHP](https://cakephp.org) 4.x.
+## Main Features
 
-The framework source code can be found here: [cakephp/cakephp](https://github.com/cakephp/cakephp).
+- User login and authentication
+- Product management
+- Raw material management
+- Supplier management
+- Product inventory and raw material inventory records
+- Low-stock material checking
+- Database export included for local setup
 
-## Installation
+## Technology Stack
 
-1. Download [Composer](https://getcomposer.org/doc/00-intro.md) or update `composer self-update`.
-2. Run `php composer.phar create-project --prefer-dist cakephp/app [app_name]`.
+- PHP 8.3 recommended
+- CakePHP 4.4
+- MySQL-compatible local database
+- Composer
 
-If Composer is installed globally, run
+## Project Structure
 
-```bash
-composer create-project --prefer-dist cakephp/app
+```text
+.
+├── config/          # CakePHP configuration
+├── database/        # SQL database export
+├── src/             # Controllers, models, entities, table classes
+├── templates/       # Page templates
+├── tests/           # PHPUnit test files
+├── vendor/          # Composer dependencies, ignored by Git
+└── webroot/         # Public CSS, JS, images, and index.php
 ```
 
-In case you want to use a custom app dir name (e.g. `/myapp/`):
+## Database
 
-```bash
-composer create-project --prefer-dist cakephp/app myapp
+The database export is stored at:
+
+```text
+database/newLove.sql
 ```
 
-You can now either use your machine's webserver to view the default home page, or start
-up the built-in webserver with:
+Main tables:
+
+- `users`: application users
+- `products`: product records
+- `collections`: product collection categories
+- `colours`: colour records
+- `rawmaterials`: raw material records
+- `suppliers`: supplier records
+- `product_inventories`: product stock records
+- `rawmaterial_inventories`: raw material stock records
+- `materials_products`: relationship table between materials and products
+
+To import the database:
 
 ```bash
-bin/cake server -p 8765
+mysql -u newLove -p < database/newLove.sql
 ```
 
-Then visit `http://localhost:8765` to see the welcome page.
+The local configuration file is:
 
-## Update
+```text
+config/app_local.php
+```
 
-Since this skeleton is a starting point for your application and various files
-would have been modified as per your needs, there isn't a way to provide
-automated upgrades, so you have to do any updates manually.
+For this machine, the database connection uses:
 
-## Configuration
+```text
+host: 127.0.0.1
+database: newLove
+username: newLove
+password: password
+```
 
-Read and edit the environment specific `config/app_local.php` and setup the 
-`'Datasources'` and any other configuration relevant for your application.
-Other environment agnostic settings can be changed in `config/app.php`.
+`config/app_local.php` is ignored by Git because it contains local database settings.
 
-## Layout
+## Run Locally
 
-The app skeleton uses [Milligram](https://milligram.io/) (v1.3) minimalist CSS
-framework by default. You can, however, replace it with any other library or
-custom styles.
+Install dependencies if `vendor/` is missing:
+
+```bash
+composer install
+```
+
+Run the project with PHP 8.3:
+
+```bash
+/opt/homebrew/opt/php@8.3/bin/php -S 127.0.0.1:8765 -t webroot webroot/index.php
+```
+
+Open:
+
+```text
+http://127.0.0.1:8765
+```
+
+The home page redirects to the login page when the user is not logged in. This is expected because the main inventory pages are protected.
+
+## Useful Pages
+
+```text
+/auth/login
+/products
+/rawmaterials
+/suppliers
+```
+
+## Notes
+
+- PHP 8.3 is recommended for this project.
+- PHP 8.5 may cause compatibility errors with older CakePHP dependencies.
+- If the database connection fails with `localhost`, use `127.0.0.1` in `config/app_local.php`.
+- PHPUnit tests currently depend on test database tables. The included `tests/schema.sql` is still a template, so the full test suite may fail until test schema setup is completed.
