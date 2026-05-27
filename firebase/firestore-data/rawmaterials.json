@@ -1,0 +1,100 @@
+[
+    {
+        "document_id": "7",
+        "data": {
+            "id": 7,
+            "name": "Cernit Bezel Triple Bowl Earring Case",
+            "delivery_time": "2 weeks",
+            "description": "\"Introducing our Cernit Bezel Triple Bowl Earring Component – the perfect foundation for your jewelry creations. Crafted with precision and elegance, these bezel components feature three gracefully curved bowls, designed to securely hold and showcase your",
+            "cost_price": "2.50",
+            "supplier_id": 6,
+            "photo": "Cernit-Bezels-Triple-Bowl-Earrings-27x11x3mm.jpg",
+            "colour_id": 5,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "8",
+        "data": {
+            "id": 8,
+            "name": "Cernit Bezel Long Oval Pendant Case",
+            "delivery_time": "1 week",
+            "description": "\"Elevate your jewelry designs with our Cernit Bezel Long Oval Earring Component. Expertly crafted, this component features a gracefully elongated oval bezel that's perfect for showcasing your favorite gemstones, resin creations, or other precious elements",
+            "cost_price": "1.50",
+            "supplier_id": 7,
+            "photo": "Cernit-Bezel-Long-Oval-Pendant-39x10x5mm.jpg",
+            "colour_id": 8,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "9",
+        "data": {
+            "id": 9,
+            "name": "Cernit Bezel Triangle Pendant Case",
+            "delivery_time": "1 week",
+            "description": "\"Unlock your creativity with our Cernit Bezel Triangle Pendant. This beautifully crafted pendant component boasts a sleek triangular design, ideal for showcasing your artistic creations, gemstones, or other cherished embellishments. Its unique shape adds ",
+            "cost_price": "1.00",
+            "supplier_id": 8,
+            "photo": "Cernit-Bezel-Triangle-Pendant-26x17x19x4mm.jpg",
+            "colour_id": 5,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "10",
+        "data": {
+            "id": 10,
+            "name": "Butterfly Ear Nuts",
+            "delivery_time": "1 week",
+            "description": "\"Secure your earrings with style and ease using our Butterfly Ear Nut. These delicately designed ear nuts not only provide a secure grip for your earrings but also feature a charming butterfly shape, adding a touch of whimsy and elegance to your jewelry. ",
+            "cost_price": "0.50",
+            "supplier_id": 9,
+            "photo": "Butterfly-Ear-Nuts-BRIGHT-ROSE-GOLD_Stainless-Steel-50-pk.jpg",
+            "colour_id": 8,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "11",
+        "data": {
+            "id": 11,
+            "name": "Black Butterfly Ear Nuts",
+            "delivery_time": "1 week",
+            "description": "\"Enhance your earring designs with our Black Butterfly Ear Nut. These unique ear nuts combine functionality with a touch of sophistication, featuring a sleek black finish and an elegant butterfly shape. Not only do they provide a secure and comfortable fi",
+            "cost_price": "0.50",
+            "supplier_id": 9,
+            "photo": "Butterfly-Ear-Nuts-BLACK-plated_Stainless-Steel-50-pk.jpg",
+            "colour_id": 7,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "12",
+        "data": {
+            "id": 12,
+            "name": "Gold Hollow Tube",
+            "delivery_time": "1 week",
+            "description": "\"Discover the timeless elegance of our Gold Hollow Tube. Crafted with precision and sophistication, this exquisite component showcases a hollow tube design in radiant gold, ideal for adding a touch of refinement to your jewelry creations. Whether used as ",
+            "cost_price": "0.75",
+            "supplier_id": 10,
+            "photo": "Hollow-Curved-Tube-80mmx6mm-Gold-Colour.jpg",
+            "colour_id": 1,
+            "lowStockLimit": 0
+        }
+    },
+    {
+        "document_id": "23",
+        "data": {
+            "id": 23,
+            "name": "item1",
+            "delivery_time": "2 days",
+            "description": "fewrfr",
+            "cost_price": "34.00",
+            "supplier_id": 7,
+            "photo": "1.png",
+            "colour_id": 2,
+            "lowStockLimit": null
+        }
+    }
+]

@@ -1,0 +1,112 @@
+[
+    {
+        "document_id": "16",
+        "data": {
+            "id": 16,
+            "name": "Two Circle Earring",
+            "description": "The Two Circle Earring belongs to our Gold Collection and brings together a fantastic vibrance to the wearer",
+            "photo": "27497E2A-A9B8-46B4-9D7A-173F178F5767.PNG",
+            "collection_id": 5,
+            "colour_id": 1
+        }
+    },
+    {
+        "document_id": "17",
+        "data": {
+            "id": 17,
+            "name": "Gold and Silver Pearl Earring",
+            "description": "\"Add a touch of elegance to your jewelry collection with our exquisite Gold and Silver Pearl Earrings. These stunning earrings feature lustrous pearls delicately set in a harmonious blend of gold and silver, creating a timeless and versatile accessory tha",
+            "photo": "IMG_3799.PNG",
+            "collection_id": 6,
+            "colour_id": 5
+        }
+    },
+    {
+        "document_id": "18",
+        "data": {
+            "id": 18,
+            "name": "Silver Pearl Earring",
+            "description": "\"Elevate your style with our timeless Pearl Earring. Crafted with meticulous attention to detail, these earrings showcase the natural beauty of pearls. Each pearl is hand-selected for its luster and elegance, making every pair unique. Whether you're dress",
+            "photo": "IMG_3800.PNG",
+            "collection_id": 6,
+            "colour_id": 5
+        }
+    },
+    {
+        "document_id": "19",
+        "data": {
+            "id": 19,
+            "name": "Gold Ball Earring",
+            "description": "\"Enhance your everyday style with our chic Gold Ball Earring. These earrings feature a classic design with a contemporary twist, showcasing a gleaming gold ball that adds a touch of modern elegance to any outfit. With their versatile and minimalist appeal",
+            "photo": "IMG_3801.PNG",
+            "collection_id": 5,
+            "colour_id": 1
+        }
+    },
+    {
+        "document_id": "20",
+        "data": {
+            "id": 20,
+            "name": "Three Stone Necklace",
+            "description": "\"Elevate your neckline with our exquisite Three Stone Necklace. This stunning piece of jewelry features a delicate chain adorned with three sparkling gemstones, each carefully chosen for its brilliance and beauty. The three stones symbolize the past, pres",
+            "photo": "IMG_5049.PNG",
+            "collection_id": 7,
+            "colour_id": 1
+        }
+    },
+    {
+        "document_id": "21",
+        "data": {
+            "id": 21,
+            "name": "Blue Ball Earring",
+            "description": "\"Make a bold and stylish statement with our Blue Ball Earring. These eye-catching earrings feature vibrant blue spheres that instantly catch the eye and add a pop of color to your look. The spherical design adds a touch of modern flair to your ensemble, m",
+            "photo": "IMG_6888.PNG",
+            "collection_id": 7,
+            "colour_id": 2
+        }
+    },
+    {
+        "document_id": "22",
+        "data": {
+            "id": 22,
+            "name": "Bronze Stone Earring",
+            "description": "\"Elevate your style with our stunning Bronze Stone Earrings. These elegant earrings feature exquisite bronze-hued stones, carefully selected for their rich, earthy tones and unique character. The warm and timeless design adds a touch of sophistication to ",
+            "photo": "PNG image-912E6B02CF67-1.PNG",
+            "collection_id": 7,
+            "colour_id": 8
+        }
+    },
+    {
+        "document_id": "23",
+        "data": {
+            "id": 23,
+            "name": "Gold Stone Earring",
+            "description": "\"Radiate timeless elegance with our Gold Stone Earrings. These exquisite earrings feature dazzling golden-hued stones that capture the light and add a touch of luxury to your look. The classic design and shimmering stones make them a versatile accessory s",
+            "photo": "PNG image-C296B86DAF6F-1.jpg",
+            "collection_id": 5,
+            "colour_id": 1
+        }
+    },
+    {
+        "document_id": "24",
+        "data": {
+            "id": 24,
+            "name": "Three Gold Piece Earring",
+            "description": "\"Elevate your elegance with our Three Gold Piece Earring. This exquisite earring set features a trio of finely crafted gold pieces, each designed with a unique charm and style. These versatile earrings can be mixed and matched to create a personalized loo",
+            "photo": "PNG image-FDF05AEC4FFE-1.PNG",
+            "collection_id": 5,
+            "colour_id": 1
+        }
+    },
+    {
+        "document_id": "40",
+        "data": {
+            "id": 40,
+            "name": "item1",
+            "description": "sdafsd",
+            "photo": "1.png",
+            "collection_id": 5,
+            "colour_id": 2
+        }
+    }
+]

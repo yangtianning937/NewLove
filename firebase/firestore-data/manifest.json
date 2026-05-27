@@ -1,0 +1,51 @@
+{
+    "database": "newLove",
+    "exported_at": "2026-05-27T14:02:56+00:00",
+    "collections": [
+        {
+            "name": "collections",
+            "file": "collections.json",
+            "documents": 3
+        },
+        {
+            "name": "colours",
+            "file": "colours.json",
+            "documents": 7
+        },
+        {
+            "name": "materials_products",
+            "file": "materials_products.json",
+            "documents": 5
+        },
+        {
+            "name": "product_inventories",
+            "file": "product_inventories.json",
+            "documents": 8
+        },
+        {
+            "name": "products",
+            "file": "products.json",
+            "documents": 10
+        },
+        {
+            "name": "rawmaterial_inventories",
+            "file": "rawmaterial_inventories.json",
+            "documents": 5
+        },
+        {
+            "name": "rawmaterials",
+            "file": "rawmaterials.json",
+            "documents": 7
+        },
+        {
+            "name": "suppliers",
+            "file": "suppliers.json",
+            "documents": 5
+        },
+        {
+            "name": "users",
+            "file": "users.json",
+            "documents": 4
+        }
+    ]
+}

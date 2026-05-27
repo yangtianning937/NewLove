@@ -1,0 +1,23 @@
+[
+    {
+        "document_id": "5",
+        "data": {
+            "id": 5,
+            "name": "Gold Collection"
+        }
+    },
+    {
+        "document_id": "6",
+        "data": {
+            "id": 6,
+            "name": "Pearl Collection"
+        }
+    },
+    {
+        "document_id": "7",
+        "data": {
+            "id": 7,
+            "name": "Summer Collection"
+        }
+    }
+]

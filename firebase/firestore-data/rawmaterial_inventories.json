@@ -1,0 +1,47 @@
+[
+    {
+        "document_id": "43",
+        "data": {
+            "id": 43,
+            "rawmaterial_id": 7,
+            "quantity": 110,
+            "lowStockLimit": 5
+        }
+    },
+    {
+        "document_id": "44",
+        "data": {
+            "id": 44,
+            "rawmaterial_id": 8,
+            "quantity": 30,
+            "lowStockLimit": 40
+        }
+    },
+    {
+        "document_id": "45",
+        "data": {
+            "id": 45,
+            "rawmaterial_id": 9,
+            "quantity": 63,
+            "lowStockLimit": 30
+        }
+    },
+    {
+        "document_id": "46",
+        "data": {
+            "id": 46,
+            "rawmaterial_id": 10,
+            "quantity": 201,
+            "lowStockLimit": 60
+        }
+    },
+    {
+        "document_id": "47",
+        "data": {
+            "id": 47,
+            "rawmaterial_id": 12,
+            "quantity": 86,
+            "lowStockLimit": 100
+        }
+    }
+]

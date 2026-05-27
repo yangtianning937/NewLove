@@ -1,0 +1,58 @@
+[
+    {
+        "document_id": "15",
+        "data": {
+            "id": 15,
+            "first_name": "Arnav",
+            "last_name": "Bhalla",
+            "email": "arnie.bhalla@gmail.com",
+            "password": "$2y$10$2t9/V6G8lxupHaEAWGjNS.CfW4F7VVrPCamqKlBKolFfC0AwZch0C",
+            "nonce": "7f3d0e1687ab2f40a6e6242a4364698434df6920c92f0084f23a271b1816d3a6327ae3fad09aadf4e9311c07ae1319bfd69efe94f13f76cb06e057910c800356",
+            "nonce_expiry": "2023-10-18 14:40:29",
+            "created": "2023-09-04 15:48:26",
+            "modified": "2023-10-11 14:40:29"
+        }
+    },
+    {
+        "document_id": "16",
+        "data": {
+            "id": 16,
+            "first_name": "admin",
+            "last_name": "admin",
+            "email": "admin@email.com",
+            "password": "$2y$10$KXl3bQpbloNq649c.sdv7.EC85OUhiBnEy2VTc1Dm6TLpFT.EDNci",
+            "nonce": null,
+            "nonce_expiry": null,
+            "created": "2023-09-12 19:51:37",
+            "modified": "2023-09-12 19:51:37"
+        }
+    },
+    {
+        "document_id": "17",
+        "data": {
+            "id": 17,
+            "first_name": "Arnav",
+            "last_name": "Bhalla",
+            "email": "abha0028@student.monash.edu",
+            "password": "$2y$10$1gOxbXqOAY8BfeqSClXzhOtv2zV/5ZxAHW6HDueo5lUbOIIXCygIK",
+            "nonce": "bb28c7133f596040c01c2ef33980d48623848b083e3836ff66371c6de4c8a28da181463d41a1d55965c8e1f2b182fbdbf72341eb18081280986c6291324779fb",
+            "nonce_expiry": "2023-10-18 14:40:39",
+            "created": "2023-10-02 13:22:53",
+            "modified": "2023-10-11 14:40:39"
+        }
+    },
+    {
+        "document_id": "18",
+        "data": {
+            "id": 18,
+            "first_name": "tianning",
+            "last_name": "yang",
+            "email": "tyan0026@student.monash.edu",
+            "password": "$2y$10$Kb9ciOE7o85g4b8LEgv8geX1i0dtm9n.T4fwYkUvFH.3wkzfoR9m2",
+            "nonce": null,
+            "nonce_expiry": null,
+            "created": "2023-10-11 20:37:07",
+            "modified": "2023-10-11 20:37:07"
+        }
+    }
+]
