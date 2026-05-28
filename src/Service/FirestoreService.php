@@ -75,6 +75,22 @@ class FirestoreService
         return $this->decodeDocument($response);
     }
 
+    public function setDocument(string $collection, string $documentId, array $data): array
+    {
+        $response = $this->request(
+            'PATCH',
+            $this->documentsUrl($collection . '/' . $documentId),
+            ['fields' => $this->encodeMapFields($data)]
+        );
+
+        return $this->decodeDocument((array)$response);
+    }
+
+    public function deleteDocument(string $collection, string $documentId): void
+    {
+        $this->request('DELETE', $this->documentsUrl($collection . '/' . $documentId));
+    }
+
     private function loadServiceAccount(array $config): array
     {
         $json = trim((string)($config['serviceAccountJson'] ?? ''));
@@ -157,6 +173,10 @@ class FirestoreService
 
         if ($response === false || $statusCode < 200 || $statusCode >= 300) {
             throw new RuntimeException("Firestore request failed with HTTP {$statusCode}: {$error} {$response}");
+        }
+
+        if (trim((string)$response) === '') {
+            return [];
         }
 
         $decoded = json_decode((string)$response, true);
@@ -275,6 +295,54 @@ class FirestoreService
         return $data;
     }
 
+    private function encodeMapFields(array $data): array
+    {
+        $fields = [];
+
+        foreach ($data as $key => $value) {
+            $fields[(string)$key] = $this->encodeValue($value);
+        }
+
+        return $fields;
+    }
+
+    private function encodeValue($value): array
+    {
+        if ($value === null || $value === '') {
+            return ['nullValue' => null];
+        }
+
+        if (is_bool($value)) {
+            return ['booleanValue' => $value];
+        }
+
+        if (is_int($value)) {
+            return ['integerValue' => (string)$value];
+        }
+
+        if (is_float($value)) {
+            return ['doubleValue' => $value];
+        }
+
+        if (is_array($value)) {
+            if ($this->isList($value)) {
+                return [
+                    'arrayValue' => [
+                        'values' => array_map([$this, 'encodeValue'], $value),
+                    ],
+                ];
+            }
+
+            return [
+                'mapValue' => [
+                    'fields' => $this->encodeMapFields($value),
+                ],
+            ];
+        }
+
+        return ['stringValue' => (string)$value];
+    }
+
     private function decodeValue(array $value)
     {
         if (array_key_exists('nullValue', $value)) {
@@ -320,5 +388,14 @@ class FirestoreService
     private function base64UrlEncode(string $value): string
     {
         return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+    }
+
+    private function isList(array $value): bool
+    {
+        if ($value === []) {
+            return true;
+        }
+
+        return array_keys($value) === range(0, count($value) - 1);
     }
 }

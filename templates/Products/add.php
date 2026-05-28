@@ -26,33 +26,39 @@
         </aside>
         <div class="column-responsive column-80">
             <div class="product form content">
-                <?= $this->Form->create($product, ['type' => 'file']) ?>
+                <?= $this->Form->create(!empty($usingFirestore) ? null : $product, ['type' => 'file']) ?>
                 <fieldset>
                     <h2><?= __('Add a New Product') ?></h2>
                     <legend><?= __('Fields Marked * Are Mandatory') ?></legend>
                     <?php
                     echo $this->Form->label('name', 'Name *');
-                    echo $this->Form->control('name', ['label'=>false]);
+                    echo $this->Form->control('name', [
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($product->name ?? '') : null,
+                    ]);
 
                     echo $this->Form->label('collection_id', 'Collection');
                     echo $this->Form->control('collection_id', [
-                        'options' => $collectionNames, // Use the fetched collection names
-                        'empty' => true, // Optional, adds an empty option
-                        'label' => false
+                        'options' => $collectionNames,
+                        'empty' => true,
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($product->collection_id ?? '') : null,
                     ]);
 
                     echo $this->Form->label('colour_id', 'Colour *');
                     echo $this->Form->control('colour_id', [
-                        'options' => $colourName, // Use the fetched collection names
-                        'empty' => true, // Optional, adds an empty option
-                        'label' => false
+                        'options' => $colourName,
+                        'empty' => true,
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($product->colour_id ?? '') : null,
                     ]);
 
                     echo $this->Form->label('description', 'Product Description');
                     echo $this->Form->control('description', [
-                        'type' => 'textarea', // Use the fetched collection names
+                        'type' => 'textarea',
                         'label' => false,
-                        'rows' => 5
+                        'rows' => 5,
+                        'value' => !empty($usingFirestore) ? ($product->description ?? '') : null,
                     ]);
 
                     ?>

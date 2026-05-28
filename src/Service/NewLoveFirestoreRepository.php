@@ -102,6 +102,70 @@ class NewLoveFirestoreRepository
         return $product;
     }
 
+    public function emptyProduct(): stdClass
+    {
+        return $this->toObject([
+            'name' => '',
+            'description' => '',
+            'photo' => '',
+            'collection_id' => null,
+            'colour_id' => null,
+        ]);
+    }
+
+    public function productExistsWithNameAndColour(string $name, $colourId, ?string $excludeId = null): bool
+    {
+        foreach ($this->collectionObjects('products') as $product) {
+            if ($excludeId !== null && (string)$product->id === (string)$excludeId) {
+                continue;
+            }
+
+            if (
+                strcasecmp((string)$product->name, $name) === 0 &&
+                (string)$product->colour_id === (string)$colourId
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function createProduct(array $data, string $photo): stdClass
+    {
+        $id = $this->nextNumericId('products');
+        $payload = $this->productPayload($data, $photo, $id);
+        $saved = $this->firestore->setDocument('products', (string)$id, $payload);
+        unset($this->cache['products']);
+
+        return $this->toObject($saved);
+    }
+
+    public function updateProduct(string $id, array $data, ?string $photo = null): stdClass
+    {
+        $existing = $this->documentObject('products', $id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Product not found.');
+        }
+
+        $payload = $this->productPayload(
+            array_merge(get_object_vars($existing), $data),
+            $photo ?? (string)$existing->photo,
+            (int)$existing->id
+        );
+        $saved = $this->firestore->setDocument('products', (string)$id, $payload);
+        unset($this->cache['products']);
+
+        return $this->toObject($saved);
+    }
+
+    public function deleteProduct(string $id): void
+    {
+        $this->firestore->deleteDocument('products', $id);
+        unset($this->cache['products']);
+    }
+
     public function rawmaterials(?string $name, ?string $colourId, ?string $description): array
     {
         $rawmaterials = array_values($this->collectionObjects('rawmaterials'));
@@ -185,6 +249,38 @@ class NewLoveFirestoreRepository
         }
 
         return $list;
+    }
+
+    private function nextNumericId(string $collection): int
+    {
+        $maxId = 0;
+
+        foreach ($this->collectionObjects($collection) as $item) {
+            $maxId = max($maxId, (int)$item->id);
+        }
+
+        return $maxId + 1;
+    }
+
+    private function productPayload(array $data, string $photo, int $id): array
+    {
+        return [
+            'id' => $id,
+            'name' => trim((string)($data['name'] ?? '')),
+            'description' => trim((string)($data['description'] ?? '')),
+            'photo' => $photo,
+            'collection_id' => $this->nullableInteger($data['collection_id'] ?? null),
+            'colour_id' => $this->nullableInteger($data['colour_id'] ?? null),
+        ];
+    }
+
+    private function nullableInteger($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int)$value;
     }
 
     private function documentObject(string $collection, string $id): ?stdClass

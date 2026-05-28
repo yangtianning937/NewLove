@@ -22,7 +22,13 @@ class ProductsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->Authentication->allowUnauthenticated(['index', 'view']);
+        $allowedActions = ['index', 'view'];
+
+        if ($this->firestoreRepository()->isEnabled()) {
+            $allowedActions = ['index', 'view', 'add', 'edit', 'delete'];
+        }
+
+        $this->Authentication->allowUnauthenticated($allowedActions);
     }
 
     /**
@@ -156,6 +162,12 @@ class ProductsController extends AppController
      */
     public function add()
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            return $this->addWithFirestore($firestoreRepository);
+        }
+
         $product = $this->Products->newEmptyEntity();
 
         $CollectionsTable = new CollectionsTable();
@@ -222,6 +234,12 @@ class ProductsController extends AppController
      */
     public function edit($id = null)
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            return $this->editWithFirestore($firestoreRepository, (string)$id);
+        }
+
         $product = $this->Products->get($id, [
             'contain' => [],
         ]);
@@ -287,6 +305,16 @@ class ProductsController extends AppController
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
+
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $firestoreRepository->deleteProduct((string)$id);
+            $this->Flash->success(__('The product has been deleted.'));
+
+            return $this->redirect(['action' => 'index']);
+        }
+
         $product = $this->Products->get($id);
         if ($this->Products->delete($product)) {
             $this->Flash->success(__('The product has been deleted.'));
@@ -300,5 +328,97 @@ class ProductsController extends AppController
     private function firestoreRepository(): NewLoveFirestoreRepository
     {
         return new NewLoveFirestoreRepository();
+    }
+
+    private function addWithFirestore(NewLoveFirestoreRepository $firestoreRepository)
+    {
+        $product = $this->productEntity($firestoreRepository->emptyProduct());
+        $collectionNames = $firestoreRepository->collectionList();
+        $colourName = $firestoreRepository->colourList();
+        $usingFirestore = true;
+
+        if ($this->request->is('post')) {
+            $data = $this->request->getData();
+            $file = $this->request->getData('photo');
+            $filename = $this->uploadedFileName($file);
+
+            if (trim((string)($data['name'] ?? '')) === '') {
+                $this->Flash->error(__('Please enter a product name.'));
+            } elseif (empty($data['colour_id'])) {
+                $this->Flash->error(__('Please choose a colour.'));
+            } elseif ($filename === null) {
+                $this->Flash->error(__('Please upload a product image.'));
+            } elseif ($firestoreRepository->productExistsWithNameAndColour((string)$data['name'], $data['colour_id'])) {
+                $this->Flash->error(__('You cannot add the same product with the same colour.'));
+            } else {
+                $file->moveTo(WWW_ROOT . 'img' . DS . $filename);
+                $savedProduct = $firestoreRepository->createProduct($data, $filename);
+                $this->Flash->success(__('The product has been saved.'));
+
+                return $this->redirect(['action' => 'view', $savedProduct->id]);
+            }
+
+            $product = $this->productEntity((object)$data);
+        }
+
+        $this->set(compact('product', 'collectionNames', 'colourName', 'usingFirestore'));
+    }
+
+    private function editWithFirestore(NewLoveFirestoreRepository $firestoreRepository, string $id)
+    {
+        $existingProduct = $firestoreRepository->product($id);
+
+        if ($existingProduct === null) {
+            throw new NotFoundException(__('Product not found'));
+        }
+
+        $product = $this->productEntity($existingProduct);
+        $collectionNames = $firestoreRepository->collectionList();
+        $colourName = $firestoreRepository->colourList();
+        $usingFirestore = true;
+
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            $data = $this->request->getData();
+
+            if (trim((string)($data['name'] ?? '')) === '') {
+                $this->Flash->error(__('Please enter a product name.'));
+            } elseif (empty($data['colour_id'])) {
+                $this->Flash->error(__('Please choose a colour.'));
+            } elseif ($firestoreRepository->productExistsWithNameAndColour((string)$data['name'], $data['colour_id'], $id)) {
+                $this->Flash->error(__('You cannot edit to have the same product name and colour as another product.'));
+            } else {
+                $file = $data['photo'] ?? null;
+                $filename = $this->uploadedFileName($file);
+
+                if ($filename !== null) {
+                    $file->moveTo(WWW_ROOT . 'img' . DS . $filename);
+                }
+
+                $savedProduct = $firestoreRepository->updateProduct($id, $data, $filename);
+                $this->Flash->success(__('The product has been saved.'));
+
+                return $this->redirect(['action' => 'view', $savedProduct->id]);
+            }
+
+            $product = $this->productEntity((object)array_merge(get_object_vars($existingProduct), $data));
+        }
+
+        $this->set(compact('product', 'collectionNames', 'colourName', 'usingFirestore'));
+    }
+
+    private function uploadedFileName($file): ?string
+    {
+        if (!is_object($file) || !method_exists($file, 'getClientFilename')) {
+            return null;
+        }
+
+        $filename = trim((string)$file->getClientFilename());
+
+        return $filename !== '' ? $filename : null;
+    }
+
+    private function productEntity(object $product): object
+    {
+        return (object)get_object_vars($product);
     }
 }
