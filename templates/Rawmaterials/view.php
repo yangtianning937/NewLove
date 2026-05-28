@@ -8,8 +8,11 @@
 <div class="row">
     <aside class="column">
         <?= $this->Html->link(__('To List of Materials'), ['action' => 'index'], ['class' => 'btn btn-dark btn-lg float-left']) ?>
+            <?php if (empty($usingFirestore)): ?>
             <?= $this->Html->link(__('Add New Material'), ['action' => 'add'], ['class' => 'btn btn-dark btn-lg float-right']) ?>
+            <?php endif; ?>
             </aside>
+    <?php if (empty($usingFirestore)): ?>
     <div class="container text-center">
             <div class="row justify-content-center">
                         <h1>Options</h1>
@@ -24,6 +27,7 @@
                             </div>
             </div>
     </div>
+    <?php endif; ?>
     <div class="container px-4 px-lg-5 my-5">
         <div class="row gx-4 gx-lg-5 align-items-center">
                             <div class="col-md-6">
@@ -53,4 +57,3 @@
         </div>
     </div>
 </section>
-

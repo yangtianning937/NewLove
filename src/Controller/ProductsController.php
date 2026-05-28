@@ -2,7 +2,10 @@
 declare(strict_types=1);
 
 namespace App\Controller;
-use Cake\ORM\TableRegistry; // 导入 TableRegistry 类
+
+use App\Service\NewLoveFirestoreRepository;
+use Cake\Http\Exception\NotFoundException;
+use Cake\ORM\TableRegistry;
 use App\Model\Table\CollectionsTable;
 use App\Model\Table\ColoursTable;
 use App\Model\Table\RawmaterialsTable;
@@ -16,6 +19,12 @@ use App\Model\Table\ProductMaterialBridgeTable;
  */
 class ProductsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->Authentication->allowUnauthenticated(['index', 'view']);
+    }
+
     /**
      * Index method
      *
@@ -27,6 +36,20 @@ class ProductsController extends AppController
         $colourID = $this->request->getQuery('colour_id');
         $collectionID = $this->request->getQuery('collection_id');
         $productsDesc = $this->request->getQuery('description');
+
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $product = $firestoreRepository->products($productsName, $colourID, $collectionID, $productsDesc);
+            $colourName = $firestoreRepository->colourList();
+            $collectionName = $firestoreRepository->collectionList();
+            $usingFirestore = true;
+
+            $this->set(compact('product', 'colourName', 'collectionName', 'usingFirestore'));
+            $this->set(compact('productsName', 'colourID', 'collectionID', 'productsDesc'));
+
+            return;
+        }
 
         $productsTable = TableRegistry::getTableLocator()->get('Products');
 
@@ -80,6 +103,23 @@ class ProductsController extends AppController
      */
     public function view($id = null)
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $product = $firestoreRepository->product((string)$id);
+
+            if ($product === null) {
+                throw new NotFoundException(__('Product not found'));
+            }
+
+            $collectionName = !empty($product->collection) ? $product->collection->name : 'null';
+            $productColour = !empty($product->colour) ? $product->colour->name : 'null';
+            $usingFirestore = true;
+
+            $this->set(compact('product', 'collectionName', 'productColour', 'usingFirestore'));
+
+            return;
+        }
 
         $product = $this->Products->get($id, [
             'contain' => [],
@@ -255,5 +295,10 @@ class ProductsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    private function firestoreRepository(): NewLoveFirestoreRepository
+    {
+        return new NewLoveFirestoreRepository();
     }
 }

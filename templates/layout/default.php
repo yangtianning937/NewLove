@@ -18,6 +18,7 @@ use App\Model\Table\ProductInventoriesTable;
 use Cake\Database\Expression\QueryExpression;
 $cakeDescription = 'CakePHP: the rapid development php framework';
 $this->disableAutoLayout();
+$isFirestoreReadOnly = !empty($usingFirestore);
 ?>
 <!DOCTYPE html>
 <html>
@@ -77,10 +78,12 @@ $this->disableAutoLayout();
                     <!-- Dropdown content -->
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Products','action'=> 'index']) ?>">Products</a>
+                        <?php if (!$isFirestoreReadOnly): ?>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Products','action'=> 'add']) ?>">Add new Products</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Collections', 'action' => 'index']) ?>">Product Collection</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Colours', 'action' => 'index']) ?>">Colours</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'ProductInventories','action'=> 'index']) ?>">Product Inventory</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -98,20 +101,27 @@ $this->disableAutoLayout();
                     <!-- Dropdown content -->
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Rawmaterials','action'=> 'index']) ?>">Materials</a>
+                        <?php if (!$isFirestoreReadOnly): ?>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Rawmaterials','action'=> 'add']) ?>">Add new Materials</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Colours', 'action' => 'index']) ?>">Colours</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'RawmaterialInventories','action'=> 'index']) ?>">Material Inventory</a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
 
+                <?php if (!$isFirestoreReadOnly): ?>
                 <a class="navbar-brand" href="<?= $this->Url->build(['controller'=>'Suppliers','action'=> 'index']) ?>">Suppliers</a>
+                <?php endif; ?>
                 <li class="dropdown">
                     <i class="fa-solid fa-bell fa-2xl" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <?php
                             foreach ($rawmaterials_lowstock as $rawmaterial) {
-                                echo '<li><a class="dropdown-item" href="' . $this->Url->build(['controller' => 'RawmaterialInventories', 'action' => 'index']) . '">Raw material: ' . $rawmaterial->name . ' is low on stock (Low Stock Limit: ' . $rawmaterial->name . ')</a></li>';
+                                $target = $isFirestoreReadOnly
+                                    ? ['controller' => 'Rawmaterials', 'action' => 'view', $rawmaterial->id]
+                                    : ['controller' => 'RawmaterialInventories', 'action' => 'index'];
+                                echo '<li><a class="dropdown-item" href="' . $this->Url->build($target) . '">Raw material: ' . h($rawmaterial->name) . ' is low on stock</a></li>';
                             }
                         ?>
                     </ul>

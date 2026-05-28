@@ -6,6 +6,7 @@
 ?>
 <section class="py-5">
 
+    <?php if (empty($usingFirestore)): ?>
     <div class="button-container">
     <?= $this->Html->link(__('Add New Material'), ['action' => 'add'], ['class' => 'btn btn-dark btn-lg']) ?>
     &emsp; &emsp; &emsp; &emsp; &emsp;
@@ -14,9 +15,10 @@
         <?= $this->Html->link('Material Inventory', ['controller'=>'RawmaterialInventories','action'=> 'index'], ['class' => 'btn btn-dark btn-lg']) ?>
 
 </div>
+    <?php endif; ?>
 
     <div class="box">
-        <!-- 搜索表单 -->
+        <!-- Search form -->
             <form method="GET" action="<?= $this->Url->build(['action' => 'index']) ?>" class="mb-3">
                     <div class="input-group">
                 <input type="text" class="form-control" name="name" placeholder="Search by Material Name" value="<?= isset($name) ? h($name) : '' ?>">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\NewLoveFirestoreRepository;
 use Cake\Controller\Controller;
 use Cake\Event\EventInterface;
 
@@ -38,6 +39,14 @@ class AppController extends Controller
     public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
+
+        $firestoreRepository = new NewLoveFirestoreRepository();
+        if ($firestoreRepository->isEnabled()) {
+            $rawmaterials_lowstock = $firestoreRepository->rawmaterialsLowStock();
+            $this->set(compact('rawmaterials_lowstock'));
+
+            return;
+        }
 
         // Load Rawmaterials model
         $RawmaterialsTable = $this->fetchTable("Rawmaterials");

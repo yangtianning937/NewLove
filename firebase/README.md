@@ -54,6 +54,32 @@ FIREBASE_PROJECT_ID=newlove-yt-260528 FIREBASE_ACCESS_TOKEN=your_access_token /o
 
 The import script reads `firebase/firestore-data/manifest.json` and writes each JSON file into a Firestore collection with the same name.
 
+## Use Firestore In The App
+
+The app can now use Firestore for these read-only pages:
+
+- `/products`
+- `/products/view/:id`
+- `/rawmaterials`
+- `/rawmaterials/view/:id`
+
+Set the Firebase project id and one authentication option before starting the CakePHP server:
+
+```bash
+export FIREBASE_PROJECT_ID="newlove-yt-260528"
+export FIRESTORE_DATABASE="(default)"
+export FIREBASE_SERVICE_ACCOUNT_PATH="/absolute/path/to/firebase-service-account.json"
+```
+
+For quick local testing, a temporary OAuth access token also works:
+
+```bash
+export FIREBASE_PROJECT_ID="newlove-yt-260528"
+export FIREBASE_ACCESS_TOKEN="your_access_token"
+```
+
+When Firestore is configured, these read-only pages no longer need the local MySQL database. Create, edit, delete, and account features still use MySQL until those modules are migrated.
+
 ## Suggested Firestore Collections
 
 - `users`

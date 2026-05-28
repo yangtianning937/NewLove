@@ -12,6 +12,7 @@
     <aside class="column">
         <?= $this->Html->link(__('To List of Products'), ['action' => 'index'], ['class' => 'btn btn-dark btn-lg float-left']) ?>
     </aside>
+    <?php if (empty($usingFirestore)): ?>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <?= $this->Html->link(__('Add New Product'), ['action' => 'add'], ['class' => 'btn btn-dark btn-lg float-right']) ?>
     </div>
@@ -29,6 +30,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
     <div class="container px-4 px-lg-5 my-5">
         <div class="row gx-4 gx-lg-5 align-items-center">
             <div class="col-md-6">
@@ -52,11 +54,13 @@
                 <?php if (!empty($product->materials_products)): ?>
                     <div class="mt-4">
                         <h3>Associated Raw Materials:</h3>
+                        <?php if (empty($usingFirestore)): ?>
                         <div class="col">
                             <?= $this->Html->link(__('Add Material to this Product'), ['controller' => 'MaterialsProducts', 'action' => 'add', $product->id], ['class' => 'btn btn-dark btn-lg']) ?>
                             <?= $this->Html->link(__('View Materials Added to this Product'), ['controller' => 'MaterialsProducts', 'action' => 'index', $product->id], ['class' => 'btn btn-dark btn-lg']) ?>
 
                         </div>
+                        <?php endif; ?>
                         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
                             <?php foreach ($product->materials_products as $materialsProduct): ?>
                                 <div class="col mb-5">
@@ -86,9 +90,11 @@
                 <?php else: ?>
                     <div class="mt-4">
                         <p>No associated raw materials for this product.</p>
+                        <?php if (empty($usingFirestore)): ?>
                         <div class="col">
                             <?= $this->Html->link(__('Add Materials Product for this Product'), ['controller' => 'MaterialsProducts', 'action' => 'add', $product->id], ['class' => 'btn btn-dark btn-lg']) ?>
                         </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 

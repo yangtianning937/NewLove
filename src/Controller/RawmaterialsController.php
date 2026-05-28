@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\NewLoveFirestoreRepository;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ColoursTable;
 use App\Model\Table\SuppliersTable;
@@ -15,6 +17,12 @@ use App\Model\Table\SuppliersTable;
  */
 class RawmaterialsController extends AppController
 {
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->Authentication->allowUnauthenticated(['index', 'view']);
+    }
+
     /**
      * Index method
      *
@@ -25,6 +33,19 @@ class RawmaterialsController extends AppController
         $rawmaterialsName = $this->request->getQuery('name');
         $colourID = $this->request->getQuery('colour_id');
         $rawmaterialsDesc = $this->request->getQuery('description');
+
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $rawmaterial = $firestoreRepository->rawmaterials($rawmaterialsName, $colourID, $rawmaterialsDesc);
+            $colourName = $firestoreRepository->colourList();
+            $usingFirestore = true;
+
+            $this->set(compact('rawmaterial', 'colourName', 'usingFirestore'));
+            $this->set(compact('rawmaterialsName', 'colourID', 'rawmaterialsDesc'));
+
+            return;
+        }
 
         $rawmaterialsTable = TableRegistry::getTableLocator()->get('Rawmaterials');
 
@@ -71,6 +92,24 @@ class RawmaterialsController extends AppController
      */
     public function view($id = null)
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $rawmaterial = $firestoreRepository->rawmaterial((string)$id);
+
+            if ($rawmaterial === null) {
+                throw new NotFoundException(__('Raw material not found'));
+            }
+
+            $supplierName = !empty($rawmaterial->supplier) ? $rawmaterial->supplier->name : 'null';
+            $colourName = !empty($rawmaterial->colour) ? $rawmaterial->colour->name : 'null';
+            $usingFirestore = true;
+
+            $this->set(compact('rawmaterial', 'supplierName', 'colourName', 'usingFirestore'));
+
+            return;
+        }
+
         $rawmaterial = $this->Rawmaterials->get($id, [
             'contain' => [],
         ]);
@@ -270,5 +309,10 @@ class RawmaterialsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    private function firestoreRepository(): NewLoveFirestoreRepository
+    {
+        return new NewLoveFirestoreRepository();
     }
 }

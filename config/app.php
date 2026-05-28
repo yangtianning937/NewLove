@@ -380,6 +380,21 @@ return [
     ],
 
     /*
+     * Firebase / Firestore configuration.
+     *
+     * The app uses Firestore only when FIREBASE_PROJECT_ID is set and either
+     * FIREBASE_ACCESS_TOKEN, FIREBASE_SERVICE_ACCOUNT_PATH, or
+     * FIREBASE_SERVICE_ACCOUNT_JSON is available.
+     */
+    'Firebase' => [
+        'projectId' => env('FIREBASE_PROJECT_ID', ''),
+        'database' => env('FIRESTORE_DATABASE', '(default)'),
+        'accessToken' => env('FIREBASE_ACCESS_TOKEN', ''),
+        'serviceAccountPath' => env('FIREBASE_SERVICE_ACCOUNT_PATH', ''),
+        'serviceAccountJson' => env('FIREBASE_SERVICE_ACCOUNT_JSON', ''),
+    ],
+
+    /*
      * Session configuration.
      *
      * Contains an array of settings to use for session configuration. The

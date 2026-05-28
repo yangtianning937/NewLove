@@ -6,6 +6,7 @@
  */
 ?>
 <section class="py-5">
+    <?php if (empty($usingFirestore)): ?>
     <div class="button-container">
         <?= $this->Html->link(__('Add New Product'), ['action' => 'add'], ['class' => 'btn btn-dark btn-lg']) ?>
         &emsp; &emsp; &emsp; &emsp; &emsp;
@@ -15,6 +16,7 @@
         &emsp; &emsp; &emsp; &emsp; &emsp;
         <?= $this->Html->link('Product Inventory', ['controller'=>'ProductInventories','action'=> 'index'], ['class' => 'btn btn-dark btn-lg']) ?>
     </div>
+    <?php endif; ?>
 
     <div class="box">
         <form method="GET" action="<?= $this->Url->build(['action' => 'index']) ?>" class="mb-3">
