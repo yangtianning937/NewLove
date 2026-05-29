@@ -34,49 +34,58 @@
         </div>
         <div class="column-responsive column-80">
             <div class="rawmaterial form content">
-                <?= $this->Form->create($rawmaterial, ['type' => 'file']) ?>
+                <?= $this->Form->create(!empty($usingFirestore) ? null : $rawmaterial, ['type' => 'file']) ?>
                 <fieldset>
                     <legend><?= __('Add New Material') ?></legend>
                     <?php
                     echo $this->Form->label('name', 'Name');
-                    echo $this->Form->control('name', ['label' => false]);
+                    echo $this->Form->control('name', [
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->name ?? '') : null,
+                    ]);
 
-                    // Delivery time selector
                     echo $this->Form->label('delivery_time_unit', 'Delivery Time Unit');
                     echo $this->Form->control('delivery_time_unit', [
                         'type' => 'select',
                         'options' => ['days' => 'Days', 'weeks' => 'Weeks'],
-                        'label' => false
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->delivery_time_unit ?? '') : null,
                     ]);
-                    // Delivery time quantity input box
                     echo $this->Form->label('delivery_time_value', 'Delivery Time Quantity');
                     echo $this->Form->control('delivery_time_value', [
                         'type' => 'number',
-                        'label' => false
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->delivery_time_value ?? '') : null,
                     ]);
 
                     echo $this->Form->label('cost_price', 'Price per Unit');
-                    echo $this->Form->control('cost_price', ['label' => false]);
+                    echo $this->Form->control('cost_price', [
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->cost_price ?? '') : null,
+                    ]);
 
                     echo $this->Form->label('supplier_id', 'Supplier');
                     echo $this->Form->control('supplier_id', [
                         'options' => $supplierName,
                         'empty' => true,
-                        'label' => false
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->supplier_id ?? '') : null,
                     ]);
 
                     echo $this->Form->label('colour_id', 'Colour');
                     echo $this->Form->control('colour_id', [
                         'options' => $colourName,
                         'empty' => true,
-                        'label' => false
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->colour_id ?? '') : null,
                     ]);
 
                     echo $this->Form->label('description', 'Material Description');
                     echo $this->Form->control('description', [
                         'type' => 'textarea',
                         'rows' => 5,
-                        'label' => false
+                        'label' => false,
+                        'value' => !empty($usingFirestore) ? ($rawmaterial->description ?? '') : null,
                     ]);
                     
                     echo $this->Form->control('photo', ['type' => 'file', 'label' => 'Material Image']);

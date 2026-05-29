@@ -20,7 +20,13 @@ class RawmaterialsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->Authentication->allowUnauthenticated(['index', 'view']);
+        $allowedActions = ['index', 'view'];
+
+        if ($this->firestoreRepository()->isEnabled()) {
+            $allowedActions = ['index', 'view', 'add', 'edit', 'delete'];
+        }
+
+        $this->Authentication->allowUnauthenticated($allowedActions);
     }
 
     /**
@@ -140,6 +146,12 @@ class RawmaterialsController extends AppController
      */
     public function add()
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            return $this->addWithFirestore($firestoreRepository);
+        }
+
         $rawmaterial = $this->Rawmaterials->newEmptyEntity();
 
         $ColoursTable = new ColoursTable();
@@ -217,6 +229,12 @@ class RawmaterialsController extends AppController
 
     public function edit($id = null)
     {
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            return $this->editWithFirestore($firestoreRepository, (string)$id);
+        }
+
         $rawmaterial = $this->Rawmaterials->get($id, [
             'contain' => [],
         ]);
@@ -301,6 +319,16 @@ class RawmaterialsController extends AppController
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
+
+        $firestoreRepository = $this->firestoreRepository();
+
+        if ($firestoreRepository->isEnabled()) {
+            $firestoreRepository->deleteRawmaterial((string)$id);
+            $this->Flash->success(__('The rawmaterial has been deleted.'));
+
+            return $this->redirect(['action' => 'index']);
+        }
+
         $rawmaterial = $this->Rawmaterials->get($id);
         if ($this->Rawmaterials->delete($rawmaterial)) {
             $this->Flash->success(__('The rawmaterial has been deleted.'));
@@ -314,5 +342,106 @@ class RawmaterialsController extends AppController
     private function firestoreRepository(): NewLoveFirestoreRepository
     {
         return new NewLoveFirestoreRepository();
+    }
+
+    private function addWithFirestore(NewLoveFirestoreRepository $firestoreRepository)
+    {
+        $rawmaterial = $this->rawmaterialFormObject($firestoreRepository->emptyRawmaterial());
+        $colourName = $firestoreRepository->colourList();
+        $supplierName = $firestoreRepository->supplierList();
+        $usingFirestore = true;
+
+        if ($this->request->is('post')) {
+            $data = $this->request->getData();
+            $file = $data['photo'] ?? null;
+            $filename = $this->uploadedFileName($file);
+
+            if (trim((string)($data['name'] ?? '')) === '') {
+                $this->Flash->error(__('Please enter a raw material name.'));
+            } elseif (empty($data['colour_id'])) {
+                $this->Flash->error(__('Please choose a colour.'));
+            } elseif ($filename === null) {
+                $this->Flash->error(__('Please upload an image for the raw material.'));
+            } elseif ($firestoreRepository->rawmaterialExistsWithNameAndColour((string)$data['name'], $data['colour_id'])) {
+                $this->Flash->error(__('A rawmaterial with the same name and colour already exists. Please choose a different colour.'));
+            } else {
+                $file->moveTo(WWW_ROOT . 'img' . DS . $filename);
+                $savedRawmaterial = $firestoreRepository->createRawmaterial($data, $filename);
+                $this->Flash->success(__('The rawmaterial has been saved.'));
+
+                return $this->redirect(['action' => 'view', $savedRawmaterial->id]);
+            }
+
+            $rawmaterial = $this->rawmaterialFormObject((object)$data);
+        }
+
+        $this->set(compact('rawmaterial', 'colourName', 'supplierName', 'usingFirestore'));
+    }
+
+    private function editWithFirestore(NewLoveFirestoreRepository $firestoreRepository, string $id)
+    {
+        $existingRawmaterial = $firestoreRepository->rawmaterial($id);
+
+        if ($existingRawmaterial === null) {
+            throw new NotFoundException(__('Raw material not found'));
+        }
+
+        $rawmaterial = $this->rawmaterialFormObject($existingRawmaterial);
+        $colourName = $firestoreRepository->colourList();
+        $supplierName = $firestoreRepository->supplierList();
+        $usingFirestore = true;
+
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            $data = $this->request->getData();
+
+            if (trim((string)($data['name'] ?? '')) === '') {
+                $this->Flash->error(__('Please enter a raw material name.'));
+            } elseif (empty($data['colour_id'])) {
+                $this->Flash->error(__('Please choose a colour.'));
+            } elseif ($firestoreRepository->rawmaterialExistsWithNameAndColour((string)$data['name'], $data['colour_id'], $id)) {
+                $this->Flash->error(__('A raw material with the same name and color already exists.'));
+            } else {
+                $file = $data['photo'] ?? null;
+                $filename = $this->uploadedFileName($file);
+
+                if ($filename !== null) {
+                    $file->moveTo(WWW_ROOT . 'img' . DS . $filename);
+                }
+
+                $savedRawmaterial = $firestoreRepository->updateRawmaterial($id, $data, $filename);
+                $this->Flash->success(__('The raw material has been saved.'));
+
+                return $this->redirect(['action' => 'view', $savedRawmaterial->id]);
+            }
+
+            $rawmaterial = $this->rawmaterialFormObject((object)array_merge(get_object_vars($existingRawmaterial), $data));
+        }
+
+        $this->set(compact('rawmaterial', 'colourName', 'supplierName', 'usingFirestore'));
+    }
+
+    private function uploadedFileName($file): ?string
+    {
+        if (!is_object($file) || !method_exists($file, 'getClientFilename')) {
+            return null;
+        }
+
+        $filename = trim((string)$file->getClientFilename());
+
+        return $filename !== '' ? $filename : null;
+    }
+
+    private function rawmaterialFormObject(object $rawmaterial): object
+    {
+        $data = get_object_vars($rawmaterial);
+        $deliveryTime = (string)($data['delivery_time'] ?? '');
+
+        if ($deliveryTime !== '' && empty($data['delivery_time_value']) && empty($data['delivery_time_unit'])) {
+            $parts = explode(' ', $deliveryTime, 2);
+            $data['delivery_time_value'] = $parts[0] ?? '';
+            $data['delivery_time_unit'] = $parts[1] ?? '';
+        }
+
+        return (object)$data;
     }
 }

@@ -69,6 +69,12 @@ These product write actions also use Firestore when Firebase is configured:
 - `/products/edit/:id`
 - `/products/delete/:id`
 
+These raw material write actions also use Firestore when Firebase is configured:
+
+- `/rawmaterials/add`
+- `/rawmaterials/edit/:id`
+- `/rawmaterials/delete/:id`
+
 Set the Firebase project id and one authentication option before starting the CakePHP server:
 
 ```bash
@@ -84,9 +90,9 @@ export FIREBASE_PROJECT_ID="newlove-yt-260528"
 export FIREBASE_ACCESS_TOKEN="your_access_token"
 ```
 
-When Firestore is configured, product browsing and product create/edit/delete no longer need the local MySQL database. Raw material create/edit/delete and account features still use MySQL until those modules are migrated.
+When Firestore is configured, product and raw material browsing/create/edit/delete no longer need the local MySQL database. Account features still use MySQL until those modules are migrated.
 
-Because account login has not been migrated yet, product write routes are open in Firestore mode. Move account login to Firebase Auth before using this in a public production environment.
+Because account login has not been migrated yet, product and raw material write routes are open in Firestore mode. Move account login to Firebase Auth before using this in a public production environment.
 
 ## Suggested Firestore Collections
 

@@ -31,6 +31,11 @@ class NewLoveFirestoreRepository
         return $this->nameList('collections');
     }
 
+    public function supplierList(): array
+    {
+        return $this->nameList('suppliers');
+    }
+
     public function products(?string $name, ?string $colourId, ?string $collectionId, ?string $description): array
     {
         $products = array_values($this->collectionObjects('products'));
@@ -218,6 +223,75 @@ class NewLoveFirestoreRepository
         return $rawmaterial;
     }
 
+    public function emptyRawmaterial(): stdClass
+    {
+        return $this->toObject([
+            'name' => '',
+            'delivery_time' => '',
+            'delivery_time_unit' => '',
+            'delivery_time_value' => '',
+            'description' => '',
+            'cost_price' => '',
+            'supplier_id' => null,
+            'photo' => '',
+            'colour_id' => null,
+            'lowStockLimit' => null,
+        ]);
+    }
+
+    public function rawmaterialExistsWithNameAndColour(string $name, $colourId, ?string $excludeId = null): bool
+    {
+        foreach ($this->collectionObjects('rawmaterials') as $rawmaterial) {
+            if ($excludeId !== null && (string)$rawmaterial->id === (string)$excludeId) {
+                continue;
+            }
+
+            if (
+                strcasecmp((string)$rawmaterial->name, $name) === 0 &&
+                (string)$rawmaterial->colour_id === (string)$colourId
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function createRawmaterial(array $data, string $photo): stdClass
+    {
+        $id = $this->nextNumericId('rawmaterials');
+        $payload = $this->rawmaterialPayload($data, $photo, $id);
+        $saved = $this->firestore->setDocument('rawmaterials', (string)$id, $payload);
+        unset($this->cache['rawmaterials']);
+
+        return $this->toObject($saved);
+    }
+
+    public function updateRawmaterial(string $id, array $data, ?string $photo = null): stdClass
+    {
+        $existing = $this->documentObject('rawmaterials', $id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Raw material not found.');
+        }
+
+        $payload = $this->rawmaterialPayload(
+            array_merge(get_object_vars($existing), $data),
+            $photo ?? (string)$existing->photo,
+            (int)$existing->id
+        );
+        $saved = $this->firestore->setDocument('rawmaterials', (string)$id, $payload);
+        unset($this->cache['rawmaterials']);
+
+        return $this->toObject($saved);
+    }
+
+    public function deleteRawmaterial(string $id): void
+    {
+        $this->firestore->deleteDocument('rawmaterials', $id);
+        unset($this->cache['rawmaterials']);
+    }
+
     public function rawmaterialsLowStock(): array
     {
         $lowStock = [];
@@ -272,6 +346,33 @@ class NewLoveFirestoreRepository
             'collection_id' => $this->nullableInteger($data['collection_id'] ?? null),
             'colour_id' => $this->nullableInteger($data['colour_id'] ?? null),
         ];
+    }
+
+    private function rawmaterialPayload(array $data, string $photo, int $id): array
+    {
+        return [
+            'id' => $id,
+            'name' => trim((string)($data['name'] ?? '')),
+            'delivery_time' => $this->deliveryTime($data),
+            'description' => trim((string)($data['description'] ?? '')),
+            'cost_price' => trim((string)($data['cost_price'] ?? '')),
+            'supplier_id' => $this->nullableInteger($data['supplier_id'] ?? null),
+            'photo' => $photo,
+            'colour_id' => $this->nullableInteger($data['colour_id'] ?? null),
+            'lowStockLimit' => $this->nullableInteger($data['lowStockLimit'] ?? null),
+        ];
+    }
+
+    private function deliveryTime(array $data): string
+    {
+        $value = trim((string)($data['delivery_time_value'] ?? ''));
+        $unit = trim((string)($data['delivery_time_unit'] ?? ''));
+
+        if ($value !== '' && $unit !== '') {
+            return $value . ' ' . $unit;
+        }
+
+        return trim((string)($data['delivery_time'] ?? ''));
     }
 
     private function nullableInteger($value): ?int
