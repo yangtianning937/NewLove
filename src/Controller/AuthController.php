@@ -46,9 +46,29 @@ class AuthController extends AppController {
      */
     public function register() {
         if ($this->usesFirestoreAuth()) {
-            $this->Flash->error('User registration is not available while Firebase login is enabled.');
+            $user = null;
 
-            return $this->redirect(['action' => 'login']);
+            if ($this->request->is('post')) {
+                $data = $this->request->getData();
+                $errors = $this->validateFirestoreRegistration($data);
+
+                if ($errors === []) {
+                    try {
+                        (new NewLoveFirestoreRepository())->createUser($data);
+                        $this->Flash->success('You have been registered. Please log in. ');
+
+                        return $this->redirect(['action' => 'login']);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error('The user could not be registered. Please, try again.');
+                    }
+                } else {
+                    $this->Flash->error(implode(' ', $errors));
+                }
+            }
+
+            $this->set(compact('user'));
+
+            return;
         }
 
         $user = $this->Users->newEmptyEntity();
@@ -247,6 +267,48 @@ class AuthController extends AppController {
     private function usesFirestoreAuth(): bool
     {
         return (new NewLoveFirestoreRepository())->isEnabled();
+    }
+
+    private function validateFirestoreRegistration(array $data): array
+    {
+        $errors = [];
+        $firstName = trim((string)($data['first_name'] ?? ''));
+        $lastName = trim((string)($data['last_name'] ?? ''));
+        $email = strtolower(trim((string)($data['email'] ?? '')));
+        $password = (string)($data['password'] ?? '');
+        $passwordConfirm = (string)($data['password_confirm'] ?? '');
+
+        if ($firstName === '') {
+            $errors[] = 'First name cannot be empty.';
+        } elseif (strlen($firstName) > 64) {
+            $errors[] = 'First name cannot exceed 64 characters.';
+        }
+
+        if ($lastName === '') {
+            $errors[] = 'Last name cannot be empty.';
+        } elseif (strlen($lastName) > 64) {
+            $errors[] = 'Last name cannot exceed 64 characters.';
+        }
+
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $errors[] = 'Please enter a valid email address.';
+        } elseif ((new NewLoveFirestoreRepository())->userExistsWithEmail($email)) {
+            $errors[] = 'Email address already in use.';
+        }
+
+        if ($password === '') {
+            $errors[] = 'Password cannot be empty.';
+        } elseif (strlen($password) < 8) {
+            $errors[] = 'Password should be at least 8 characters long.';
+        } elseif (strlen($password) > 64) {
+            $errors[] = 'Password cannot exceed 64 characters.';
+        }
+
+        if ($password !== $passwordConfirm) {
+            $errors[] = 'Retyped password does not match.';
+        }
+
+        return $errors;
     }
 
 }

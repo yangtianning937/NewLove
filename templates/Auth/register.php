@@ -13,7 +13,7 @@ $this->assign('title', 'Register new user');
 <div class="container register">
     <div class="users form content">
 
-        <?= $this->Form->create($user) ?>
+        <?= $this->Form->create($user ?? null) ?>
 
         <fieldset>
             <legend style="font-size:1.8em;">Register New User</legend>

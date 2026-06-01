@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Authentication\PasswordHasher\DefaultPasswordHasher;
 use stdClass;
 
 class NewLoveFirestoreRepository
@@ -331,6 +332,33 @@ class NewLoveFirestoreRepository
         }
 
         return null;
+    }
+
+    public function userExistsWithEmail(string $email): bool
+    {
+        return $this->userByEmail($email) !== null;
+    }
+
+    public function createUser(array $data): array
+    {
+        $id = $this->nextNumericId('users');
+        $now = gmdate('Y-m-d H:i:s');
+        $payload = [
+            'id' => $id,
+            'first_name' => trim((string)($data['first_name'] ?? '')),
+            'last_name' => trim((string)($data['last_name'] ?? '')),
+            'email' => strtolower(trim((string)($data['email'] ?? ''))),
+            'password' => (new DefaultPasswordHasher())->hash((string)($data['password'] ?? '')),
+            'nonce' => null,
+            'nonce_expiry' => null,
+            'created' => $now,
+            'modified' => $now,
+        ];
+
+        $saved = $this->firestore->setDocument('users', (string)$id, $payload);
+        unset($this->cache['users']);
+
+        return $saved;
     }
 
     private function nameList(string $collection): array

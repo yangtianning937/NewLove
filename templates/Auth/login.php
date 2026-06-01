@@ -77,9 +77,7 @@ $this->assign('title', 'Login');
 
                         <hr class="hr-between-buttons">
 
-                        <?php if (!$usingFirestore): ?>
-                            <?= $this->Html->link('Register new user', ['controller' => 'Auth', 'action' => 'register'], ['class' => 'button button-clear' , 'style' => 'color:black; font-size:15px;']) ?>
-                        <?php endif; ?>
+                        <?= $this->Html->link('Register new user', ['controller' => 'Auth', 'action' => 'register'], ['class' => 'button button-clear' , 'style' => 'color:black; font-size:15px;']) ?>
             </div>
         </div>
     </div>
