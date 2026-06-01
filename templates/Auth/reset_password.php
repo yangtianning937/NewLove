@@ -6,6 +6,7 @@
 
 $this->layout = 'login';
 $this->assign('title', 'Reset Password');
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <div class="container login">
     <div class="row">
@@ -13,7 +14,7 @@ $this->assign('title', 'Reset Password');
 
             <div class="users form content">
 
-                <?= $this->Form->create($user) ?>
+                <?= $this->Form->create($usingFirestore ? null : $user) ?>
 
                 <fieldset>
 

@@ -91,9 +91,30 @@ class AuthController extends AppController {
      */
     public function forgetPassword() {
         if ($this->usesFirestoreAuth()) {
-            $this->Flash->error('Password reset is not available while Firebase login is enabled.');
+            if ($this->request->is('post')) {
+                $repository = new NewLoveFirestoreRepository();
+                $user = $repository->userByEmail((string)$this->request->getData('email'));
 
-            return $this->redirect(['action' => 'login']);
+                if ($user !== null) {
+                    $nonce = Security::randomString(128);
+                    $nonceExpiry = (new FrozenTime('+7 days'))->format('Y-m-d H:i:s');
+
+                    try {
+                        $repository->updateUserResetToken((string)$user['id'], $nonce, $nonceExpiry);
+                        $this->sendPasswordResetEmail($user, $nonce);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error('We are having issue to reset your password. Please try again. ');
+
+                        return $this->render();
+                    }
+                }
+
+                $this->Flash->success('Please check your inbox (or spam folder) for an email regarding how to reset your account password. ');
+
+                return $this->redirect(['action' => 'login']);
+            }
+
+            return;
         }
 
         if ($this->request->is('post')) {
@@ -104,34 +125,12 @@ class AuthController extends AppController {
                 $user->nonce = Security::randomString(128);
                 $user->nonce_expiry = new FrozenTime('7 days');
                 if ($this->Users->save($user)) {
-                    // Now let's send the password reset email
-                    $mailer = new Mailer('default');
-
-                    // email basic config
-                    $mailer
-                        ->setEmailFormat('both')
-                        ->setTo($user->email)
-                        ->setSubject('Reset your account password');
-
-                    // select email template
-                    $mailer
-                        ->viewBuilder()
-                        ->setTemplate('reset_password');
-
-                    // transfer required view variables to email template
-                    $mailer
-                        ->setViewVars([
-                            'first_name' => $user->first_name,
-                            'last_name' => $user->last_name,
-                            'nonce' => $user->nonce,
-                            'email' => $user->email
-                        ]);
-
-                    //Send email
-                    if (!$mailer->deliver()) {
-                        // Just in case something goes wrong when sending emails
+                    try {
+                        $this->sendPasswordResetEmail($user, (string)$user->nonce);
+                    } catch (\RuntimeException $exception) {
                         $this->Flash->error('We have encountered an issue when sending you emails. Please try again. ');
-                        return $this->render();  // Skip the rest of the controller and render the view
+
+                        return $this->render();
                     }
                 } else {
                     // Just in case something goes wrong when saving nonce and expiry
@@ -160,9 +159,35 @@ class AuthController extends AppController {
      */
     public function resetPassword($nonce = null) {
         if ($this->usesFirestoreAuth()) {
-            $this->Flash->error('Password reset is not available while Firebase login is enabled.');
+            $repository = new NewLoveFirestoreRepository();
+            $user = $repository->userByNonce($nonce);
 
-            return $this->redirect(['action' => 'login']);
+            if ($user === null || new FrozenTime((string)($user['nonce_expiry'] ?? '')) < FrozenTime::now()) {
+                $this->Flash->error('Your link is invalid or expired. Please try again.');
+
+                return $this->redirect(['action' => 'forgetPassword']);
+            }
+
+            if ($this->request->is(['patch', 'post', 'put'])) {
+                $errors = $this->validateFirestorePasswordChange($this->request->getData());
+
+                if ($errors === []) {
+                    try {
+                        $repository->updateUserPassword((string)$user['id'], (string)$this->request->getData('password'), true);
+                        $this->Flash->success('Your password has been successfully reset. Please login with new password. ');
+
+                        return $this->redirect(['action' => 'login']);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error('The password cannot be reset. Please try again.');
+                    }
+                } else {
+                    $this->Flash->error(implode(' ', $errors));
+                }
+            }
+
+            $this->set(compact('user'));
+
+            return;
         }
 
         $user = $this->Users->findByNonce($nonce)->first();
@@ -365,6 +390,33 @@ class AuthController extends AppController {
         }
 
         return $errors;
+    }
+
+    private function sendPasswordResetEmail($user, string $nonce): void
+    {
+        $firstName = is_array($user) ? (string)($user['first_name'] ?? '') : (string)$user->first_name;
+        $lastName = is_array($user) ? (string)($user['last_name'] ?? '') : (string)$user->last_name;
+        $email = is_array($user) ? (string)($user['email'] ?? '') : (string)$user->email;
+
+        $mailer = new Mailer('default');
+        $mailer
+            ->setEmailFormat('both')
+            ->setTo($email)
+            ->setSubject('Reset your account password');
+        $mailer
+            ->viewBuilder()
+            ->setTemplate('reset_password');
+        $mailer
+            ->setViewVars([
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'nonce' => $nonce,
+                'email' => $email,
+            ]);
+
+        if (!$mailer->deliver()) {
+            throw new \RuntimeException('Could not send reset email.');
+        }
     }
 
 }

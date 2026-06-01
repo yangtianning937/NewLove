@@ -345,6 +345,27 @@ class NewLoveFirestoreRepository
         return get_object_vars($user);
     }
 
+    public function userByNonce(?string $nonce): ?array
+    {
+        $nonce = trim((string)$nonce);
+
+        if ($nonce === '') {
+            return null;
+        }
+
+        foreach ($this->collectionObjects('users') as $user) {
+            if (!isset($user->nonce)) {
+                continue;
+            }
+
+            if ((string)$user->nonce === $nonce) {
+                return get_object_vars($user);
+            }
+        }
+
+        return null;
+    }
+
     public function userExistsWithEmail(string $email): bool
     {
         return $this->userByEmail($email) !== null;
@@ -372,7 +393,7 @@ class NewLoveFirestoreRepository
         return $saved;
     }
 
-    public function updateUserPassword(string $id, string $password): array
+    public function updateUserResetToken(string $id, string $nonce, string $nonceExpiry): array
     {
         $existing = $this->userById($id);
 
@@ -380,22 +401,55 @@ class NewLoveFirestoreRepository
             throw new \RuntimeException('User not found.');
         }
 
-        $payload = [
-            'id' => is_numeric($existing['id'] ?? null) ? (int)$existing['id'] : $id,
-            'first_name' => trim((string)($existing['first_name'] ?? '')),
-            'last_name' => trim((string)($existing['last_name'] ?? '')),
-            'email' => strtolower(trim((string)($existing['email'] ?? ''))),
-            'password' => (new DefaultPasswordHasher())->hash($password),
-            'nonce' => $existing['nonce'] ?? null,
-            'nonce_expiry' => $existing['nonce_expiry'] ?? null,
-            'created' => $existing['created'] ?? gmdate('Y-m-d H:i:s'),
-            'modified' => gmdate('Y-m-d H:i:s'),
-        ];
+        $payload = $this->userPayload($existing);
+        $payload['nonce'] = $nonce;
+        $payload['nonce_expiry'] = $nonceExpiry;
+        $payload['modified'] = gmdate('Y-m-d H:i:s');
 
         $saved = $this->firestore->setDocument('users', $id, $payload);
         unset($this->cache['users']);
 
         return $saved;
+    }
+
+    public function updateUserPassword(string $id, string $password, bool $clearResetToken = false): array
+    {
+        $existing = $this->userById($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('User not found.');
+        }
+
+        $payload = $this->userPayload($existing);
+        $payload['password'] = (new DefaultPasswordHasher())->hash($password);
+        $payload['modified'] = gmdate('Y-m-d H:i:s');
+
+        if ($clearResetToken) {
+            $payload['nonce'] = null;
+            $payload['nonce_expiry'] = null;
+        }
+
+        $saved = $this->firestore->setDocument('users', $id, $payload);
+        unset($this->cache['users']);
+
+        return $saved;
+    }
+
+    private function userPayload(array $data): array
+    {
+        $id = $data['id'] ?? $data['_document_id'] ?? '';
+
+        return [
+            'id' => is_numeric($id) ? (int)$id : (string)$id,
+            'first_name' => trim((string)($data['first_name'] ?? '')),
+            'last_name' => trim((string)($data['last_name'] ?? '')),
+            'email' => strtolower(trim((string)($data['email'] ?? ''))),
+            'password' => (string)($data['password'] ?? ''),
+            'nonce' => $data['nonce'] ?? null,
+            'nonce_expiry' => $data['nonce_expiry'] ?? null,
+            'created' => $data['created'] ?? gmdate('Y-m-d H:i:s'),
+            'modified' => $data['modified'] ?? gmdate('Y-m-d H:i:s'),
+        ];
     }
 
     private function nameList(string $collection): array

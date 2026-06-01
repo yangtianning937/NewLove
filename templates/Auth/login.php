@@ -66,12 +66,10 @@ $this->assign('title', 'Login');
 
 
 
-                    <?php if (!$usingFirestore): ?>
-                        <?= $this->Html->link('Forgot password?', ['controller' => 'Auth', 'action' => 'forgetPassword'], [
-                        'class' => 'button button-outline',
-                        'style' => 'color: black; border-color: black; width:100%;'
-                    ]) ?>
-                    <?php endif; ?> <center>
+                    <?= $this->Html->link('Forgot password?', ['controller' => 'Auth', 'action' => 'forgetPassword'], [
+                    'class' => 'button button-outline',
+                    'style' => 'color: black; border-color: black; width:100%;'
+                ]) ?> <center>
 
                         <?= $this->Form->end() ?>
 
