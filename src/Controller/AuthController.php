@@ -201,9 +201,44 @@ class AuthController extends AppController {
      */
     public function changePassword($id = null) {
         if ($this->usesFirestoreAuth()) {
-            $this->Flash->error('Password changes are not available while Firebase login is enabled.');
+            $repository = new NewLoveFirestoreRepository();
+            $identity = $this->Authentication->getIdentity();
+            $currentUserId = $identity ? (string)$identity->getIdentifier() : '';
+            $targetUserId = $id !== null ? (string)$id : $currentUserId;
 
-            return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
+            if ($currentUserId === '' || $targetUserId === '' || $targetUserId !== $currentUserId) {
+                $this->Flash->error('You can only change your own password.');
+
+                return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
+            }
+
+            $user = $repository->userById($targetUserId);
+            if ($user === null) {
+                $this->Flash->error('The user could not be found.');
+
+                return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
+            }
+
+            if ($this->request->is(['patch', 'post', 'put'])) {
+                $errors = $this->validateFirestorePasswordChange($this->request->getData());
+
+                if ($errors === []) {
+                    try {
+                        $repository->updateUserPassword($targetUserId, (string)$this->request->getData('password'));
+                        $this->Flash->success('Your password has been successfully changed.');
+
+                        return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error('The password could not be changed. Please try again.');
+                    }
+                } else {
+                    $this->Flash->error(implode(' ', $errors));
+                }
+            }
+
+            $this->set(compact('user'));
+
+            return;
         }
 
         $user = $this->Users->get($id, [
@@ -295,6 +330,27 @@ class AuthController extends AppController {
         } elseif ((new NewLoveFirestoreRepository())->userExistsWithEmail($email)) {
             $errors[] = 'Email address already in use.';
         }
+
+        if ($password === '') {
+            $errors[] = 'Password cannot be empty.';
+        } elseif (strlen($password) < 8) {
+            $errors[] = 'Password should be at least 8 characters long.';
+        } elseif (strlen($password) > 64) {
+            $errors[] = 'Password cannot exceed 64 characters.';
+        }
+
+        if ($password !== $passwordConfirm) {
+            $errors[] = 'Retyped password does not match.';
+        }
+
+        return $errors;
+    }
+
+    private function validateFirestorePasswordChange(array $data): array
+    {
+        $errors = [];
+        $password = (string)($data['password'] ?? '');
+        $passwordConfirm = (string)($data['password_confirm'] ?? '');
 
         if ($password === '') {
             $errors[] = 'Password cannot be empty.';

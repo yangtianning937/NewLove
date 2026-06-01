@@ -5,17 +5,20 @@
  */
 
 $this->assign('title', 'Change User Password - Users');
+$usingFirestore = $usingFirestore ?? false;
+$firstName = is_array($user ?? null) ? ($user['first_name'] ?? '') : ($user->first_name ?? '');
+$lastName = is_array($user ?? null) ? ($user['last_name'] ?? '') : ($user->last_name ?? '');
 
 ?>
 <div class="row">
     <div class="column-responsive">
         <div class="users form content">
 
-            <?= $this->Form->create($user) ?>
+            <?= $this->Form->create($usingFirestore ? null : $user) ?>
 
             <fieldset>
 
-                <legend>Change Password for <u><?= h($user->first_name) ?> <?= h($user->last_name) ?></u></legend>
+                <legend>Change Password for <u><?= h($firstName) ?> <?= h($lastName) ?></u></legend>
 
                 <div class="row">
                     <?php

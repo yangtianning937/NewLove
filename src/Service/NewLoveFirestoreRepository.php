@@ -334,6 +334,17 @@ class NewLoveFirestoreRepository
         return null;
     }
 
+    public function userById(string $id): ?array
+    {
+        $user = $this->documentObject('users', $id);
+
+        if ($user === null) {
+            return null;
+        }
+
+        return get_object_vars($user);
+    }
+
     public function userExistsWithEmail(string $email): bool
     {
         return $this->userByEmail($email) !== null;
@@ -356,6 +367,32 @@ class NewLoveFirestoreRepository
         ];
 
         $saved = $this->firestore->setDocument('users', (string)$id, $payload);
+        unset($this->cache['users']);
+
+        return $saved;
+    }
+
+    public function updateUserPassword(string $id, string $password): array
+    {
+        $existing = $this->userById($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('User not found.');
+        }
+
+        $payload = [
+            'id' => is_numeric($existing['id'] ?? null) ? (int)$existing['id'] : $id,
+            'first_name' => trim((string)($existing['first_name'] ?? '')),
+            'last_name' => trim((string)($existing['last_name'] ?? '')),
+            'email' => strtolower(trim((string)($existing['email'] ?? ''))),
+            'password' => (new DefaultPasswordHasher())->hash($password),
+            'nonce' => $existing['nonce'] ?? null,
+            'nonce_expiry' => $existing['nonce_expiry'] ?? null,
+            'created' => $existing['created'] ?? gmdate('Y-m-d H:i:s'),
+            'modified' => gmdate('Y-m-d H:i:s'),
+        ];
+
+        $saved = $this->firestore->setDocument('users', $id, $payload);
         unset($this->cache['users']);
 
         return $saved;
