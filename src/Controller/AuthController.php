@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\NewLoveFirestoreRepository;
 use Cake\I18n\FrozenTime;
 use Cake\Mailer\Mailer;
 use Cake\Utility\Security;
@@ -31,9 +32,11 @@ class AuthController extends AppController {
         // These actions, however, are typically required for users who have not yet logged in.
         $this->Authentication->allowUnauthenticated(['login', 'register', 'forgetPassword', 'resetPassword']);
 
-        // CakePHP loads the model with the same name as the controller by default.
-        // Since we don't have an Auth model, we'll need to load "Users" model when starting the controller manually.
-        $this->Users = $this->fetchTable('Users');
+        if (!$this->usesFirestoreAuth()) {
+            // CakePHP loads the model with the same name as the controller by default.
+            // Since we don't have an Auth model, we'll need to load "Users" model when starting the controller manually.
+            $this->Users = $this->fetchTable('Users');
+        }
     }
 
     /**
@@ -42,6 +45,12 @@ class AuthController extends AppController {
      * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
      */
     public function register() {
+        if ($this->usesFirestoreAuth()) {
+            $this->Flash->error('User registration is not available while Firebase login is enabled.');
+
+            return $this->redirect(['action' => 'login']);
+        }
+
         $user = $this->Users->newEmptyEntity();
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
@@ -61,6 +70,12 @@ class AuthController extends AppController {
      * @return \Cake\Http\Response|null|void Redirects on successful email send, renders view otherwise.
      */
     public function forgetPassword() {
+        if ($this->usesFirestoreAuth()) {
+            $this->Flash->error('Password reset is not available while Firebase login is enabled.');
+
+            return $this->redirect(['action' => 'login']);
+        }
+
         if ($this->request->is('post')) {
             // Retrieve the user entity by provided email address
             $user = $this->Users->findByEmail($this->request->getData('email'))->first();
@@ -124,6 +139,12 @@ class AuthController extends AppController {
      * @return \Cake\Http\Response|null|void Redirects on successful password reset, renders view otherwise.
      */
     public function resetPassword($nonce = null) {
+        if ($this->usesFirestoreAuth()) {
+            $this->Flash->error('Password reset is not available while Firebase login is enabled.');
+
+            return $this->redirect(['action' => 'login']);
+        }
+
         $user = $this->Users->findByNonce($nonce)->first();
 
         // If nonce cannot find the user, or nonce is expired, prompt for re-reset password
@@ -159,6 +180,12 @@ class AuthController extends AppController {
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function changePassword($id = null) {
+        if ($this->usesFirestoreAuth()) {
+            $this->Flash->error('Password changes are not available while Firebase login is enabled.');
+
+            return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
+        }
+
         $user = $this->Users->get($id, [
             'contain' => [],
         ]);
@@ -215,6 +242,11 @@ class AuthController extends AppController {
 
         // Otherwise just send them to the login page
         return $this->redirect(['controller' => 'Auth', 'action' => 'login']);
+    }
+
+    private function usesFirestoreAuth(): bool
+    {
+        return (new NewLoveFirestoreRepository())->isEnabled();
     }
 
 }

@@ -312,6 +312,27 @@ class NewLoveFirestoreRepository
         return $lowStock;
     }
 
+    public function userByEmail(string $email): ?array
+    {
+        $email = strtolower(trim($email));
+
+        if ($email === '') {
+            return null;
+        }
+
+        foreach ($this->collectionObjects('users') as $user) {
+            if (!isset($user->email)) {
+                continue;
+            }
+
+            if (strtolower(trim((string)$user->email)) === $email) {
+                return get_object_vars($user);
+            }
+        }
+
+        return null;
+    }
+
     private function nameList(string $collection): array
     {
         $list = [];

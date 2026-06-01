@@ -41,7 +41,16 @@ class AppController extends Controller
         parent::beforeRender($event);
 
         $firestoreRepository = new NewLoveFirestoreRepository();
-        if ($firestoreRepository->isEnabled()) {
+        $usingFirestore = $firestoreRepository->isEnabled();
+        $this->set('usingFirestore', $usingFirestore);
+
+        if ($this->request->getParam('controller') === 'Auth') {
+            $this->set('rawmaterials_lowstock', []);
+
+            return;
+        }
+
+        if ($usingFirestore) {
             $rawmaterials_lowstock = $firestoreRepository->rawmaterialsLowStock();
             $this->set(compact('rawmaterials_lowstock'));
 

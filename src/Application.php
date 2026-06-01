@@ -155,7 +155,11 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         ];
 
         // Load identifiers, ensure we check email and password fields
-        $authenticationService->loadIdentifier('Authentication.Password', ['fields' => $authentication_fields]);
+        if ($this->isFirebaseAuthenticationConfigured()) {
+            $authenticationService->loadIdentifier('FirestoreUser', ['fields' => $authentication_fields]);
+        } else {
+            $authenticationService->loadIdentifier('Authentication.Password', ['fields' => $authentication_fields]);
+        }
 
         // Load the authenticators, you want session first
         $authenticationService->loadAuthenticator('Authentication.Session');
@@ -171,6 +175,17 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         ]);
 
         return $authenticationService;
+    }
+
+    private function isFirebaseAuthenticationConfigured(): bool
+    {
+        $firebase = (array)Configure::read('Firebase');
+
+        return (string)($firebase['projectId'] ?? '') !== '' && (
+            (string)($firebase['accessToken'] ?? '') !== '' ||
+            (string)($firebase['serviceAccountPath'] ?? '') !== '' ||
+            (string)($firebase['serviceAccountJson'] ?? '') !== ''
+        );
     }
 
 

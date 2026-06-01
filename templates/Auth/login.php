@@ -6,6 +6,7 @@
 use Cake\Core\Configure;
 
 $debug = Configure::read('debug');
+$usingFirestore = $usingFirestore ?? false;
 
 $this->layout = 'login';
 $this->assign('title', 'Login');
@@ -65,16 +66,20 @@ $this->assign('title', 'Login');
 
 
 
-                    <?= $this->Html->link('Forgot password?', ['controller' => 'Auth', 'action' => 'forgetPassword'], [
-                    'class' => 'button button-outline',
-                    'style' => 'color: black; border-color: black; width:100%;'
-                ]) ?> <center>
+                    <?php if (!$usingFirestore): ?>
+                        <?= $this->Html->link('Forgot password?', ['controller' => 'Auth', 'action' => 'forgetPassword'], [
+                        'class' => 'button button-outline',
+                        'style' => 'color: black; border-color: black; width:100%;'
+                    ]) ?>
+                    <?php endif; ?> <center>
 
                         <?= $this->Form->end() ?>
 
                         <hr class="hr-between-buttons">
 
-                        <?= $this->Html->link('Register new user', ['controller' => 'Auth', 'action' => 'register'], ['class' => 'button button-clear' , 'style' => 'color:black; font-size:15px;']) ?>
+                        <?php if (!$usingFirestore): ?>
+                            <?= $this->Html->link('Register new user', ['controller' => 'Auth', 'action' => 'register'], ['class' => 'button button-clear' , 'style' => 'color:black; font-size:15px;']) ?>
+                        <?php endif; ?>
             </div>
         </div>
     </div>
