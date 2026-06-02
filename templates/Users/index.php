@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var iterable<\App\Model\Entity\User> $users
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <div class="users index content">
     <?= $this->Html->link(__('New User'), ['action' => 'add'], ['class' => 'button float-right']) ?>
@@ -11,14 +12,14 @@
         <table>
             <thead>
                 <tr>
-                    <th><?= $this->Paginator->sort('id') ?></th>
-                    <th><?= $this->Paginator->sort('first_name') ?></th>
-                    <th><?= $this->Paginator->sort('last_name') ?></th>
-                    <th><?= $this->Paginator->sort('email') ?></th>
-                    <th><?= $this->Paginator->sort('nonce') ?></th>
-                    <th><?= $this->Paginator->sort('nonce_expiry') ?></th>
-                    <th><?= $this->Paginator->sort('created') ?></th>
-                    <th><?= $this->Paginator->sort('modified') ?></th>
+                    <th><?= $usingFirestore ? __('Id') : $this->Paginator->sort('id') ?></th>
+                    <th><?= $usingFirestore ? __('First Name') : $this->Paginator->sort('first_name') ?></th>
+                    <th><?= $usingFirestore ? __('Last Name') : $this->Paginator->sort('last_name') ?></th>
+                    <th><?= $usingFirestore ? __('Email') : $this->Paginator->sort('email') ?></th>
+                    <th><?= $usingFirestore ? __('Nonce') : $this->Paginator->sort('nonce') ?></th>
+                    <th><?= $usingFirestore ? __('Nonce Expiry') : $this->Paginator->sort('nonce_expiry') ?></th>
+                    <th><?= $usingFirestore ? __('Created') : $this->Paginator->sort('created') ?></th>
+                    <th><?= $usingFirestore ? __('Modified') : $this->Paginator->sort('modified') ?></th>
                     <th class="actions"><?= __('Actions') ?></th>
                 </tr>
             </thead>
@@ -43,6 +44,7 @@
             </tbody>
         </table>
     </div>
+    <?php if (!$usingFirestore): ?>
     <div class="paginator">
         <ul class="pagination">
             <?= $this->Paginator->first('<< ' . __('first')) ?>
@@ -53,4 +55,5 @@
         </ul>
         <p><?= $this->Paginator->counter(__('Page {{page}} of {{pages}}, showing {{current}} record(s) out of {{count}} total')) ?></p>
     </div>
+    <?php endif; ?>
 </div>

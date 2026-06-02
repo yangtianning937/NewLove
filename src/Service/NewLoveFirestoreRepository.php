@@ -334,6 +334,19 @@ class NewLoveFirestoreRepository
         return null;
     }
 
+    public function users(): array
+    {
+        $users = array_map(function ($user) {
+            return get_object_vars($user);
+        }, array_values($this->collectionObjects('users')));
+
+        usort($users, function (array $first, array $second): int {
+            return (int)($first['id'] ?? 0) <=> (int)($second['id'] ?? 0);
+        });
+
+        return $users;
+    }
+
     public function userById(string $id): ?array
     {
         $user = $this->documentObject('users', $id);
@@ -381,8 +394,8 @@ class NewLoveFirestoreRepository
             'last_name' => trim((string)($data['last_name'] ?? '')),
             'email' => strtolower(trim((string)($data['email'] ?? ''))),
             'password' => (new DefaultPasswordHasher())->hash((string)($data['password'] ?? '')),
-            'nonce' => null,
-            'nonce_expiry' => null,
+            'nonce' => $data['nonce'] ?? null,
+            'nonce_expiry' => $data['nonce_expiry'] ?? null,
             'created' => $now,
             'modified' => $now,
         ];
@@ -391,6 +404,40 @@ class NewLoveFirestoreRepository
         unset($this->cache['users']);
 
         return $saved;
+    }
+
+    public function updateUser(string $id, array $data): array
+    {
+        $existing = $this->userById($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('User not found.');
+        }
+
+        $password = trim((string)($data['password'] ?? ''));
+        $merged = array_merge($existing, $data);
+
+        if ($password === '') {
+            $merged['password'] = $existing['password'] ?? '';
+        }
+
+        $payload = $this->userPayload($merged);
+
+        if ($password !== '') {
+            $payload['password'] = (new DefaultPasswordHasher())->hash($password);
+        }
+
+        $payload['modified'] = gmdate('Y-m-d H:i:s');
+        $saved = $this->firestore->setDocument('users', $id, $payload);
+        unset($this->cache['users']);
+
+        return $saved;
+    }
+
+    public function deleteUser(string $id): void
+    {
+        $this->firestore->deleteDocument('users', $id);
+        unset($this->cache['users']);
     }
 
     public function updateUserResetToken(string $id, string $nonce, string $nonceExpiry): array
