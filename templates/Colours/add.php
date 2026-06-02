@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Colours $colours
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -22,13 +23,16 @@
         </aside>
         <div class="column-responsive column-80">
             <div class="productColour form content">
-                <?= $this->Form->create($colour) ?>
+                <?= $this->Form->create($usingFirestore ? null : $colour) ?>
                 <fieldset>
                     <h2><?= __('Add a New Colour') ?></h2>
                     <legend><?= __('Fields Marked * Are Mandatory') ?></legend>
                     <?php
                         echo $this->Form->label('name', 'Name *');
-                        echo $this->Form->control('name', ['label' => false]);
+                        echo $this->Form->control('name', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($colour->name ?? '') : null,
+                        ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Submit New Colour'), ['class' => 'btn btn-dark btn-lg']) ?>

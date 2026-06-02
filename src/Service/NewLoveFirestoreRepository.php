@@ -37,6 +37,113 @@ class NewLoveFirestoreRepository
         return $this->nameList('suppliers');
     }
 
+    public function collections(): array
+    {
+        return $this->basicNameRows('collections');
+    }
+
+    public function collection(string $id): ?array
+    {
+        return $this->basicNameRow('collections', $id);
+    }
+
+    public function createCollection(array $data): array
+    {
+        return $this->createBasicNameDocument('collections', $data);
+    }
+
+    public function updateCollection(string $id, array $data): array
+    {
+        return $this->updateBasicNameDocument('collections', $id, $data);
+    }
+
+    public function deleteCollection(string $id): void
+    {
+        $this->firestore->deleteDocument('collections', $id);
+        unset($this->cache['collections']);
+    }
+
+    public function colours(): array
+    {
+        return $this->basicNameRows('colours');
+    }
+
+    public function colour(string $id): ?array
+    {
+        return $this->basicNameRow('colours', $id);
+    }
+
+    public function createColour(array $data): array
+    {
+        return $this->createBasicNameDocument('colours', $data);
+    }
+
+    public function updateColour(string $id, array $data): array
+    {
+        return $this->updateBasicNameDocument('colours', $id, $data);
+    }
+
+    public function deleteColour(string $id): void
+    {
+        $this->firestore->deleteDocument('colours', $id);
+        unset($this->cache['colours']);
+    }
+
+    public function suppliers(): array
+    {
+        $suppliers = array_map(function ($supplier) {
+            return get_object_vars($supplier);
+        }, array_values($this->collectionObjects('suppliers')));
+
+        usort($suppliers, function (array $first, array $second): int {
+            return (int)($first['id'] ?? 0) <=> (int)($second['id'] ?? 0);
+        });
+
+        return $suppliers;
+    }
+
+    public function supplier(string $id): ?array
+    {
+        $supplier = $this->documentObject('suppliers', $id);
+
+        if ($supplier === null) {
+            return null;
+        }
+
+        return get_object_vars($supplier);
+    }
+
+    public function createSupplier(array $data): array
+    {
+        $id = $this->nextNumericId('suppliers');
+        $payload = $this->supplierPayload($data, $id);
+        $saved = $this->firestore->setDocument('suppliers', (string)$id, $payload);
+        unset($this->cache['suppliers']);
+
+        return $saved;
+    }
+
+    public function updateSupplier(string $id, array $data): array
+    {
+        $existing = $this->supplier($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Supplier not found.');
+        }
+
+        $payload = $this->supplierPayload(array_merge($existing, $data), (int)$existing['id']);
+        $saved = $this->firestore->setDocument('suppliers', $id, $payload);
+        unset($this->cache['suppliers']);
+
+        return $saved;
+    }
+
+    public function deleteSupplier(string $id): void
+    {
+        $this->firestore->deleteDocument('suppliers', $id);
+        unset($this->cache['suppliers']);
+    }
+
     public function products(?string $name, ?string $colourId, ?string $collectionId, ?string $description): array
     {
         $products = array_values($this->collectionObjects('products'));
@@ -512,6 +619,63 @@ class NewLoveFirestoreRepository
         return $list;
     }
 
+    private function basicNameRows(string $collection): array
+    {
+        $items = array_map(function ($item) {
+            return get_object_vars($item);
+        }, array_values($this->collectionObjects($collection)));
+
+        usort($items, function (array $first, array $second): int {
+            return (int)($first['id'] ?? 0) <=> (int)($second['id'] ?? 0);
+        });
+
+        return $items;
+    }
+
+    private function basicNameRow(string $collection, string $id): ?array
+    {
+        $item = $this->documentObject($collection, $id);
+
+        if ($item === null) {
+            return null;
+        }
+
+        return get_object_vars($item);
+    }
+
+    private function createBasicNameDocument(string $collection, array $data): array
+    {
+        $id = $this->nextNumericId($collection);
+        $payload = $this->basicNamePayload($data, $id);
+        $saved = $this->firestore->setDocument($collection, (string)$id, $payload);
+        unset($this->cache[$collection]);
+
+        return $saved;
+    }
+
+    private function updateBasicNameDocument(string $collection, string $id, array $data): array
+    {
+        $existing = $this->basicNameRow($collection, $id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Document not found.');
+        }
+
+        $payload = $this->basicNamePayload(array_merge($existing, $data), (int)$existing['id']);
+        $saved = $this->firestore->setDocument($collection, $id, $payload);
+        unset($this->cache[$collection]);
+
+        return $saved;
+    }
+
+    private function basicNamePayload(array $data, int $id): array
+    {
+        return [
+            'id' => $id,
+            'name' => trim((string)($data['name'] ?? '')),
+        ];
+    }
+
     private function nextNumericId(string $collection): int
     {
         $maxId = 0;
@@ -547,6 +711,18 @@ class NewLoveFirestoreRepository
             'photo' => $photo,
             'colour_id' => $this->nullableInteger($data['colour_id'] ?? null),
             'lowStockLimit' => $this->nullableInteger($data['lowStockLimit'] ?? null),
+        ];
+    }
+
+    private function supplierPayload(array $data, int $id): array
+    {
+        return [
+            'id' => $id,
+            'name' => trim((string)($data['name'] ?? '')),
+            'email' => trim((string)($data['email'] ?? '')),
+            'phone_no' => trim((string)($data['phone_no'] ?? '')),
+            'website' => trim((string)($data['website'] ?? '')),
+            'location' => trim((string)($data['location'] ?? '')),
         ];
     }
 

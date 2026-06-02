@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Collections $collections
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -22,13 +23,16 @@
         </aside>
         <div class="column-responsive column-80">
             <div class="productCollection form content">
-                <?= $this->Form->create($collection) ?>
+                <?= $this->Form->create($usingFirestore ? null : $collection) ?>
                 <fieldset>
                     <h2><?= __('Add a New Collection') ?></h2>
                     <legend><?= __('Fields Marked * Are Mandatory') ?></legend>
                     <?php
                         echo $this->Form->label('name', 'Name *');
-                        echo $this->Form->control('name', ['label' => false]);
+                        echo $this->Form->control('name', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($collection->name ?? '') : null,
+                        ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Submit New Collection'), ['class' => 'btn btn-dark btn-lg']) ?>

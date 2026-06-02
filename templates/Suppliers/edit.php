@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Supplier $supplier
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -25,27 +26,40 @@
         </div>
         <div class="column-responsive column-60">
             <div class="supplier form content">
-                <?= $this->Form->create($supplier) ?>
+                <?= $this->Form->create($usingFirestore ? null : $supplier) ?>
                 <fieldset>
                     <legend><?= __('Edit Supplier Details') ?></legend>
                     <?php
                         echo $this->Form->label('name', 'Name');
-                        echo $this->Form->control('name', ['label' => false]);
+                        echo $this->Form->control('name', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($supplier->name ?? '') : null,
+                        ]);
 
                         echo $this->Form->label('email', 'Email Address');
-                        echo $this->Form->control('email', ['label' => false]);
+                        echo $this->Form->control('email', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($supplier->email ?? '') : null,
+                        ]);
 
                         echo $this->Form->label('phone_no', 'Phone Number');
                         echo $this->Form->control('phone_no', [
                             'type' => 'number',
-                            'label' => false
+                            'label' => false,
+                            'value' => $usingFirestore ? ($supplier->phone_no ?? '') : null,
                         ]);
 
                         echo $this->Form->label('website', 'Wesbite');
-                        echo $this->Form->control('website', ['label' => false]);
+                        echo $this->Form->control('website', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($supplier->website ?? '') : null,
+                        ]);
 
                         echo $this->Form->label('location', 'Location');
-                        echo $this->Form->control('location', ['label' => false]);
+                        echo $this->Form->control('location', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($supplier->location ?? '') : null,
+                        ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Update Supplier'), ['class' => 'btn btn-dark btn-lg']) ?>

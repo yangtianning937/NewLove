@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Collection;
+use App\Service\NewLoveFirestoreRepository;
+use Cake\Http\Exception\NotFoundException;
+
 /**
  * Collections Controller
  *
@@ -18,6 +22,14 @@ class CollectionsController extends AppController
      */
     public function index()
     {
+        if ($this->usesFirestore()) {
+            $collections = array_map([$this, 'firestoreCollectionEntity'], (new NewLoveFirestoreRepository())->collections());
+
+            $this->set(compact('collections'));
+
+            return;
+        }
+
         $collections = $this->paginate($this->Collections);
 
         $this->set(compact('collections'));
@@ -32,6 +44,14 @@ class CollectionsController extends AppController
      */
     public function view($id = null)
     {
+        if ($this->usesFirestore()) {
+            $collection = $this->firestoreCollectionOrFail((string)$id);
+
+            $this->set(compact('collection'));
+
+            return;
+        }
+
         $collection = $this->Collections->get($id, [
             'contain' => ['Products'],
         ]);
@@ -46,6 +66,33 @@ class CollectionsController extends AppController
      */
     public function add()
     {
+        if ($this->usesFirestore()) {
+            $collection = $this->firestoreCollectionEntity([], true);
+
+            if ($this->request->is('post')) {
+                $data = $this->request->getData();
+                $collection = $this->firestoreCollectionEntity($data, true);
+                $errors = $this->validateFirestoreCollection($data);
+
+                if ($errors === []) {
+                    try {
+                        (new NewLoveFirestoreRepository())->createCollection($data);
+                        $this->Flash->success(__('The collection has been saved.'));
+
+                        return $this->redirect(['action' => 'index']);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error(__('The collection could not be saved. Please, try again.'));
+                    }
+                } else {
+                    $this->Flash->error(implode(' ', $errors));
+                }
+            }
+
+            $this->set(compact('collection'));
+
+            return;
+        }
+
         $collection = $this->Collections->newEmptyEntity();
         if ($this->request->is('post')) {
             $collection = $this->Collections->patchEntity($collection, $this->request->getData());
@@ -68,6 +115,40 @@ class CollectionsController extends AppController
      */
     public function edit($id = null)
     {
+        if ($this->usesFirestore()) {
+            $repository = new NewLoveFirestoreRepository();
+            $collectionData = $repository->collection((string)$id);
+
+            if ($collectionData === null) {
+                throw new NotFoundException(__('Collection not found'));
+            }
+
+            $collection = $this->firestoreCollectionEntity($collectionData);
+
+            if ($this->request->is(['patch', 'post', 'put'])) {
+                $data = $this->request->getData();
+                $collection = $this->firestoreCollectionEntity(array_merge($collectionData, $data));
+                $errors = $this->validateFirestoreCollection($data);
+
+                if ($errors === []) {
+                    try {
+                        $repository->updateCollection((string)$id, $data);
+                        $this->Flash->success(__('The collection has been saved.'));
+
+                        return $this->redirect(['action' => 'index']);
+                    } catch (\RuntimeException $exception) {
+                        $this->Flash->error(__('The collection could not be saved. Please, try again.'));
+                    }
+                } else {
+                    $this->Flash->error(implode(' ', $errors));
+                }
+            }
+
+            $this->set(compact('collection'));
+
+            return;
+        }
+
         $collection = $this->Collections->get($id, [
             'contain' => [],
         ]);
@@ -93,6 +174,18 @@ class CollectionsController extends AppController
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
+
+        if ($this->usesFirestore()) {
+            try {
+                (new NewLoveFirestoreRepository())->deleteCollection((string)$id);
+                $this->Flash->success(__('The collection has been deleted.'));
+            } catch (\RuntimeException $exception) {
+                $this->Flash->error(__('The collection could not be deleted. Please, try again.'));
+            }
+
+            return $this->redirect(['action' => 'index']);
+        }
+
         $collection = $this->Collections->get($id);
         if ($this->Collections->delete($collection)) {
             $this->Flash->success(__('The collection has been deleted.'));
@@ -101,5 +194,46 @@ class CollectionsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    private function usesFirestore(): bool
+    {
+        return (new NewLoveFirestoreRepository())->isEnabled();
+    }
+
+    private function firestoreCollectionOrFail(string $id): Collection
+    {
+        $collection = (new NewLoveFirestoreRepository())->collection($id);
+
+        if ($collection === null) {
+            throw new NotFoundException(__('Collection not found'));
+        }
+
+        return $this->firestoreCollectionEntity($collection);
+    }
+
+    private function firestoreCollectionEntity(array $data = [], bool $isNew = false): Collection
+    {
+        unset($data['_document_id']);
+
+        return new Collection($data, [
+            'useSetters' => false,
+            'markClean' => true,
+            'markNew' => $isNew,
+        ]);
+    }
+
+    private function validateFirestoreCollection(array $data): array
+    {
+        $errors = [];
+        $name = trim((string)($data['name'] ?? ''));
+
+        if ($name === '') {
+            $errors[] = 'Please enter a name for the collection.';
+        } elseif (strlen($name) > 255) {
+            $errors[] = 'Collection name cannot exceed 255 characters.';
+        }
+
+        return $errors;
     }
 }
