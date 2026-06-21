@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var iterable<\App\Model\Entity\RawmaterialInventories> $rawmaterialInventories
  */
+$usingFirestore = $usingFirestore ?? false;
 echo $this->Html->css('/vendor/datatables/dataTables.bootstrap4.min.css', ['block' => true]);
 echo $this->Html->script("/vendor/datatables/jquery.dataTables.min.js", ['block' => true]);
 echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['block' => true]);
@@ -25,9 +26,9 @@ echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['bl
                 <thead>
                     <tr>
 
-                        <th><?= $this->Paginator->sort('Raw Material') ?></th>
-                        <th><?= $this->Paginator->sort('quantity') ?></th>
-                        <th><?= $this->Paginator->sort('lowStockLimit') ?></th>
+                        <th><?= $usingFirestore ? h('Raw Material') : $this->Paginator->sort('Raw Material') ?></th>
+                        <th><?= $usingFirestore ? h('Quantity') : $this->Paginator->sort('quantity') ?></th>
+                        <th><?= $usingFirestore ? h('Low Stock Threshold') : $this->Paginator->sort('lowStockLimit') ?></th>
                         <th class="actions"><?= __('Actions') ?></th>
                     </tr>
                 </thead>
@@ -37,14 +38,14 @@ echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['bl
 
                         <td>
                             <?= $rawmaterialInventories->has('rawmaterial') ?
-                                $this->Html->link($rawmaterialInventories->rawmaterial->name . ' - ' . $rawmaterialInventories->rawmaterial->colour->name,
+                                $this->Html->link($rawmaterialInventories->rawmaterial->name . ' - ' . ($rawmaterialInventories->rawmaterial->colour->name ?? 'No colour'),
                                     ['controller' => 'Rawmaterials', 'action' => 'view', $rawmaterialInventories->rawmaterial->id])
                                 : '' ?>
                         </td>                        <td><?= $this->Number->format($rawmaterialInventories->quantity) ?></td>
                         <td><?= $this->Number->format($rawmaterialInventories->lowStockLimit) ?></td>
                         <td class="actions">
                             <?= $this->Html->link(__('Edit'), ['action' => 'edit', $rawmaterialInventories->id]) ?>
-                            <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $rawmaterialInventories->id], ['confirm' => __('Are you sure you want to delete "{0}" ?', $rawmaterialInventories->rawmaterial->name)]) ?>
+                            <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $rawmaterialInventories->id], ['confirm' => __('Are you sure you want to delete "{0}" ?', $rawmaterialInventories->rawmaterial->name ?? $rawmaterialInventories->id)]) ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

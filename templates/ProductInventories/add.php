@@ -4,6 +4,7 @@
  * @var \App\Model\Entity\ProductInventory $productInventory
  * @var \Cake\Collection\CollectionInterface|string[] $products
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -23,15 +24,24 @@
         </aside>
         <div class="column-responsive column-80">
             <div class="productInventories form content">
-                <?= $this->Form->create($productInventory) ?>
+                <?= $this->Form->create($usingFirestore ? null : $productInventory) ?>
                 <fieldset>
                     <h2><?= __('Add a New Product Inventory') ?></h2>
                     <legend><?= __('Fields Marked * Are Mandatory') ?></legend>
                     <?php
                     echo $this->Form->label('product_id', 'Product *');
-                    echo $this->Form->control('product_id', ['type' => 'select', 'options' => $products, 'empty' => true, 'label' => false]);
+                    echo $this->Form->control('product_id', [
+                        'type' => 'select',
+                        'options' => $products,
+                        'empty' => true,
+                        'label' => false,
+                        'value' => $usingFirestore ? ($productInventory->product_id ?? '') : null,
+                    ]);
                     echo $this->Form->label('quantity', 'Quantity *');
-                    echo $this->Form->control('quantity', ['label' => false]);
+                    echo $this->Form->control('quantity', [
+                        'label' => false,
+                        'value' => $usingFirestore ? ($productInventory->quantity ?? '') : null,
+                    ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Submit New Product Inventory'), ['class' => 'btn btn-dark btn-lg']) ?>

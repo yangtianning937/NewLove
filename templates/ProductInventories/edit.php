@@ -4,6 +4,7 @@
  * @var \App\Model\Entity\ProductInventory $productInventory
  * @var string[]|\Cake\Collection\CollectionInterface $products
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -31,12 +32,15 @@
         </div>
         <div class="column-responsive column-80">
             <div class="productInventories form content">
-                <?= $this->Form->create($productInventory) ?>
+                <?= $this->Form->create($usingFirestore ? null : $productInventory) ?>
                 <fieldset>
                     <legend><?= __('Edit Product Inventory') ?></legend>
                     <?php
                         echo $this->Form->label('quantity', 'Quantity');
-                        echo $this->Form->control('quantity', ['label' => false]);
+                        echo $this->Form->control('quantity', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($productInventory->quantity ?? '') : null,
+                        ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Update Product Inventory'), ['class' => 'btn btn-dark btn-lg']) ?>

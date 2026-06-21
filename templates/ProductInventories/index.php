@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var iterable<\App\Model\Entity\ProductInventory> $productInventories
  */
+$usingFirestore = $usingFirestore ?? false;
 echo $this->Html->css('/vendor/datatables/dataTables.bootstrap4.min.css', ['block' => true]);
 echo $this->Html->script("/vendor/datatables/jquery.dataTables.min.js", ['block' => true]);
 echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['block' => true]);
@@ -24,8 +25,8 @@ echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['bl
             <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th><?= $this->Paginator->sort('product_id') ?></th>
-                        <th><?= $this->Paginator->sort('quantity') ?></th>
+                        <th><?= $usingFirestore ? h('Product') : $this->Paginator->sort('product_id') ?></th>
+                        <th><?= $usingFirestore ? h('Quantity') : $this->Paginator->sort('quantity') ?></th>
                         <th class="actions"><?= __('Actions') ?></th>
                     </tr>
                 </thead>
@@ -33,12 +34,12 @@ echo $this->Html->script("/vendor/datatables/dataTables.bootstrap4.min.js", ['bl
                     <?php foreach ($productInventories as $productInventory): ?>
                     <tr>
                         <td>
-                            <?= $productInventory->has('product') ? $this->Html->link($productInventory->product->name . ' - ' . $productInventory->product->colour->name, ['controller' => 'Products', 'action' => 'view', $productInventory->product->id]) : '' ?>
+                            <?= $productInventory->has('product') ? $this->Html->link($productInventory->product->name . ' - ' . ($productInventory->product->colour->name ?? 'No colour'), ['controller' => 'Products', 'action' => 'view', $productInventory->product->id]) : '' ?>
                         </td>
                         <td><?= $this->Number->format($productInventory->quantity) ?></td>
                         <td class="actions">
                             <?= $this->Html->link(__('Edit'), ['action' => 'edit', $productInventory->product_id]) ?>
-                            <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $productInventory->product_id], ['confirm' => __('Are you sure you want to delete "{0}" ?', $productInventory->product->name)]) ?>
+                            <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $productInventory->product_id], ['confirm' => __('Are you sure you want to delete "{0}" ?', $productInventory->product->name ?? $productInventory->product_id)]) ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -3,6 +3,7 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\RawmaterialInventories $rawmaterialInventories
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -30,18 +31,29 @@
         </div>
         <div class="column-responsive column-80">
             <div class="rawmaterialInventories form content">
-                <?= $this->Form->create($rawmaterialInventory) ?>
+                <?= $this->Form->create($usingFirestore ? null : $rawmaterialInventory) ?>
                 <fieldset>
                     <legend><?= __('Edit Raw Material Inventory') ?></legend>
                     <?php
                         echo $this->Form->label('rawmaterial_id', 'Raw Material');
-                        echo $this->Form->control('rawmaterial_id', ['label' => false, 'empty' => true]);
+                        echo $this->Form->control('rawmaterial_id', [
+                            'label' => false,
+                            'empty' => true,
+                            'options' => $rawmaterials ?? [],
+                            'value' => $usingFirestore ? ($rawmaterialInventory->rawmaterial_id ?? '') : null,
+                        ]);
 
                         echo $this->Form->label('quantity', 'Quantity');
-                        echo $this->Form->control('quantity', ['label' => false]);
+                        echo $this->Form->control('quantity', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($rawmaterialInventory->quantity ?? '') : null,
+                        ]);
 
                         echo $this->Form->label('lowStockLimit', 'Low Stock Threshold *');
-                        echo $this->Form->control('lowStockLimit', ['label' => false]);
+                        echo $this->Form->control('lowStockLimit', [
+                            'label' => false,
+                            'value' => $usingFirestore ? ($rawmaterialInventory->lowStockLimit ?? '') : null,
+                        ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Update Material Inventory'), ['class' => 'btn btn-dark btn-lg']) ?>

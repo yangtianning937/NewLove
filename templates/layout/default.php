@@ -81,9 +81,7 @@ $isFirestoreReadOnly = !empty($usingFirestore);
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Products','action'=> 'add']) ?>">Add new Products</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Collections', 'action' => 'index']) ?>">Product Collection</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Colours', 'action' => 'index']) ?>">Colours</a>
-                        <?php if (!$isFirestoreReadOnly): ?>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'ProductInventories','action'=> 'index']) ?>">Product Inventory</a>
-                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -103,9 +101,7 @@ $isFirestoreReadOnly = !empty($usingFirestore);
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Rawmaterials','action'=> 'index']) ?>">Materials</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Rawmaterials','action'=> 'add']) ?>">Add new Materials</a>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'Colours', 'action' => 'index']) ?>">Colours</a>
-                        <?php if (!$isFirestoreReadOnly): ?>
                         <a class="dropdown-item" href="<?= $this->Url->build(['controller'=>'RawmaterialInventories','action'=> 'index']) ?>">Material Inventory</a>
-                        <?php endif; ?>
                     </div>
                 </div>
 

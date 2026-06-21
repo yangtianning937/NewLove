@@ -279,6 +279,129 @@ class NewLoveFirestoreRepository
         unset($this->cache['products']);
     }
 
+    public function productInventories(): array
+    {
+        $inventories = array_values($this->collectionObjects('product_inventories'));
+        $products = $this->collectionObjects('products');
+        $colours = $this->collectionObjects('colours');
+
+        foreach ($inventories as $inventory) {
+            $productId = (string)$inventory->product_id;
+            $inventory->product = $products[$productId] ?? null;
+
+            if ($inventory->product !== null) {
+                $colourId = isset($inventory->product->colour_id) ? (string)$inventory->product->colour_id : '';
+                $inventory->product->colour = $colours[$colourId] ?? null;
+            }
+        }
+
+        usort($inventories, function (stdClass $first, stdClass $second): int {
+            return (int)$first->product_id <=> (int)$second->product_id;
+        });
+
+        return array_map(function (stdClass $inventory): array {
+            return get_object_vars($inventory);
+        }, $inventories);
+    }
+
+    public function productInventory(string $productId): ?array
+    {
+        $inventory = $this->documentObject('product_inventories', $productId);
+
+        if ($inventory === null || (string)$inventory->product_id !== (string)$productId) {
+            foreach ($this->collectionObjects('product_inventories') as $item) {
+                if ((string)$item->product_id === (string)$productId) {
+                    $inventory = $item;
+                    break;
+                }
+            }
+        }
+
+        if ($inventory === null) {
+            return null;
+        }
+
+        $data = get_object_vars($inventory);
+        $product = $this->product((string)$inventory->product_id);
+
+        if ($product !== null) {
+            $data['product'] = $product;
+        }
+
+        return $data;
+    }
+
+    public function productInventoryProductList(): array
+    {
+        $products = [];
+
+        foreach ($this->products(null, null, null, null) as $product) {
+            $colourName = $product->colour->name ?? 'No colour';
+            $products[$product->id] = $product->name . ' - ' . $colourName;
+        }
+
+        return $products;
+    }
+
+    public function createProductInventory(array $data): array
+    {
+        $payload = $this->productInventoryPayload($data);
+        $this->adjustRawmaterialInventoryForProduct((string)$payload['product_id'], (int)$payload['quantity']);
+        $saved = $this->firestore->setDocument('product_inventories', (string)$payload['product_id'], $payload);
+        unset($this->cache['product_inventories']);
+
+        return $saved;
+    }
+
+    public function increaseProductInventory(string $productId, int $quantity): array
+    {
+        $existing = $this->productInventory($productId);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Product inventory not found.');
+        }
+
+        $newQuantity = (int)$existing['quantity'] + $quantity;
+        $this->adjustRawmaterialInventoryForProduct($productId, $quantity);
+
+        $payload = $this->productInventoryPayload([
+            'product_id' => $existing['product_id'],
+            'quantity' => $newQuantity,
+        ]);
+        $saved = $this->firestore->setDocument('product_inventories', (string)$productId, $payload);
+        unset($this->cache['product_inventories']);
+
+        return $saved;
+    }
+
+    public function updateProductInventory(string $productId, array $data): array
+    {
+        $existing = $this->productInventory($productId);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Product inventory not found.');
+        }
+
+        $newQuantity = (int)($data['quantity'] ?? $existing['quantity']);
+        $quantityChange = $newQuantity - (int)$existing['quantity'];
+        $this->adjustRawmaterialInventoryForProduct($productId, $quantityChange);
+
+        $payload = $this->productInventoryPayload([
+            'product_id' => $existing['product_id'],
+            'quantity' => $newQuantity,
+        ]);
+        $saved = $this->firestore->setDocument('product_inventories', (string)$productId, $payload);
+        unset($this->cache['product_inventories']);
+
+        return $saved;
+    }
+
+    public function deleteProductInventory(string $productId): void
+    {
+        $this->firestore->deleteDocument('product_inventories', $productId);
+        unset($this->cache['product_inventories']);
+    }
+
     public function rawmaterials(?string $name, ?string $colourId, ?string $description): array
     {
         $rawmaterials = array_values($this->collectionObjects('rawmaterials'));
@@ -398,6 +521,120 @@ class NewLoveFirestoreRepository
     {
         $this->firestore->deleteDocument('rawmaterials', $id);
         unset($this->cache['rawmaterials']);
+    }
+
+    public function rawmaterialInventories(): array
+    {
+        $inventories = array_values($this->collectionObjects('rawmaterial_inventories'));
+        $rawmaterials = $this->collectionObjects('rawmaterials');
+        $colours = $this->collectionObjects('colours');
+
+        foreach ($inventories as $inventory) {
+            $rawmaterialId = (string)$inventory->rawmaterial_id;
+            $inventory->rawmaterial = $rawmaterials[$rawmaterialId] ?? null;
+
+            if ($inventory->rawmaterial !== null) {
+                $colourId = isset($inventory->rawmaterial->colour_id) ? (string)$inventory->rawmaterial->colour_id : '';
+                $inventory->rawmaterial->colour = $colours[$colourId] ?? null;
+            }
+        }
+
+        usort($inventories, function (stdClass $first, stdClass $second): int {
+            return (int)$first->id <=> (int)$second->id;
+        });
+
+        return array_map(function (stdClass $inventory): array {
+            return get_object_vars($inventory);
+        }, $inventories);
+    }
+
+    public function rawmaterialInventory(string $id): ?array
+    {
+        $inventory = $this->documentObject('rawmaterial_inventories', $id);
+
+        if ($inventory === null) {
+            return null;
+        }
+
+        $data = get_object_vars($inventory);
+        $rawmaterial = $this->rawmaterial((string)$inventory->rawmaterial_id);
+
+        if ($rawmaterial !== null) {
+            $data['rawmaterial'] = $rawmaterial;
+        }
+
+        return $data;
+    }
+
+    public function rawmaterialInventoryByRawmaterialId(string $rawmaterialId): ?array
+    {
+        foreach ($this->collectionObjects('rawmaterial_inventories') as $inventory) {
+            if ((string)$inventory->rawmaterial_id === (string)$rawmaterialId) {
+                return get_object_vars($inventory);
+            }
+        }
+
+        return null;
+    }
+
+    public function rawmaterialInventoryRawmaterialList(): array
+    {
+        $rawmaterials = [];
+
+        foreach ($this->rawmaterials(null, null, null) as $rawmaterial) {
+            $colourName = $rawmaterial->colour->name ?? 'No colour';
+            $rawmaterials[$rawmaterial->id] = $rawmaterial->name . ' - ' . $colourName;
+        }
+
+        return $rawmaterials;
+    }
+
+    public function createRawmaterialInventory(array $data): array
+    {
+        $id = $this->nextNumericId('rawmaterial_inventories');
+        $payload = $this->rawmaterialInventoryPayload($data, $id);
+        $saved = $this->firestore->setDocument('rawmaterial_inventories', (string)$id, $payload);
+        unset($this->cache['rawmaterial_inventories']);
+
+        return $saved;
+    }
+
+    public function increaseRawmaterialInventory(string $id, int $quantity): array
+    {
+        $existing = $this->rawmaterialInventory($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Raw material inventory not found.');
+        }
+
+        $payload = $this->rawmaterialInventoryPayload(array_merge($existing, [
+            'quantity' => (int)$existing['quantity'] + $quantity,
+        ]), (int)$existing['id']);
+        $saved = $this->firestore->setDocument('rawmaterial_inventories', $id, $payload);
+        unset($this->cache['rawmaterial_inventories']);
+
+        return $saved;
+    }
+
+    public function updateRawmaterialInventory(string $id, array $data): array
+    {
+        $existing = $this->rawmaterialInventory($id);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Raw material inventory not found.');
+        }
+
+        $payload = $this->rawmaterialInventoryPayload(array_merge($existing, $data), (int)$existing['id']);
+        $saved = $this->firestore->setDocument('rawmaterial_inventories', $id, $payload);
+        unset($this->cache['rawmaterial_inventories']);
+
+        return $saved;
+    }
+
+    public function deleteRawmaterialInventory(string $id): void
+    {
+        $this->firestore->deleteDocument('rawmaterial_inventories', $id);
+        unset($this->cache['rawmaterial_inventories']);
     }
 
     public function rawmaterialsLowStock(): array
@@ -714,6 +951,27 @@ class NewLoveFirestoreRepository
         ];
     }
 
+    private function productInventoryPayload(array $data): array
+    {
+        $productId = $this->nullableInteger($data['product_id'] ?? null);
+
+        return [
+            'id' => $productId,
+            'product_id' => $productId,
+            'quantity' => (int)($data['quantity'] ?? 0),
+        ];
+    }
+
+    private function rawmaterialInventoryPayload(array $data, int $id): array
+    {
+        return [
+            'id' => $id,
+            'rawmaterial_id' => $this->nullableInteger($data['rawmaterial_id'] ?? null),
+            'quantity' => (int)($data['quantity'] ?? 0),
+            'lowStockLimit' => (int)($data['lowStockLimit'] ?? 0),
+        ];
+    }
+
     private function supplierPayload(array $data, int $id): array
     {
         return [
@@ -745,6 +1003,53 @@ class NewLoveFirestoreRepository
         }
 
         return (int)$value;
+    }
+
+    private function adjustRawmaterialInventoryForProduct(string $productId, int $quantityChange): void
+    {
+        if ($quantityChange === 0) {
+            return;
+        }
+
+        $links = array_filter($this->collectionObjects('materials_products'), function (stdClass $link) use ($productId): bool {
+            return (string)$link->product_id === (string)$productId;
+        });
+
+        if ($links === []) {
+            return;
+        }
+
+        $inventories = $this->groupObjectsByField('rawmaterial_inventories', 'rawmaterial_id');
+        $rawmaterials = $this->collectionObjects('rawmaterials');
+        $updates = [];
+
+        foreach ($links as $link) {
+            $rawmaterialId = (string)$link->rawmaterial_id;
+            $inventory = $inventories[$rawmaterialId][0] ?? null;
+
+            if ($inventory === null) {
+                continue;
+            }
+
+            $requiredQuantity = (int)$link->quantity * $quantityChange;
+            $newQuantity = (int)$inventory->quantity - $requiredQuantity;
+
+            if ($newQuantity < 0) {
+                $rawmaterialName = $rawmaterials[$rawmaterialId]->name ?? $rawmaterialId;
+                throw new \RuntimeException("Not enough inventory for raw material named '{$rawmaterialName}'. Please add more rawmaterials.");
+            }
+
+            $updates[] = [$inventory, $newQuantity];
+        }
+
+        foreach ($updates as [$inventory, $newQuantity]) {
+            $payload = $this->rawmaterialInventoryPayload(array_merge(get_object_vars($inventory), [
+                'quantity' => $newQuantity,
+            ]), (int)$inventory->id);
+            $this->firestore->setDocument('rawmaterial_inventories', (string)$inventory->id, $payload);
+        }
+
+        unset($this->cache['rawmaterial_inventories']);
     }
 
     private function documentObject(string $collection, string $id): ?stdClass
