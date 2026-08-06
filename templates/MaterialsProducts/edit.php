@@ -5,6 +5,7 @@
  * @var string[]|\Cake\Collection\CollectionInterface $products
  * @var string[]|\Cake\Collection\CollectionInterface $rawmaterials
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <section>
     <div class="row justify-content-center">
@@ -13,7 +14,7 @@
         </aside>
         <div class="column-responsive column-80">
             <div class="materialsProducts form content">
-                <?= $this->Form->create($materialsProduct) ?>
+                <?= $this->Form->create($usingFirestore ? null : $materialsProduct) ?>
                 <fieldset>
                     <legend><?= __('Edit Materials Product') ?></legend>
                     <?php
@@ -21,17 +22,21 @@
                         'options' => $products,
                         'empty' => 'Choose a product',
                         'label' => 'Product Name',
-                        'type' => 'select'
+                        'type' => 'select',
+                        'value' => $usingFirestore ? ($materialsProduct->product_id ?? '') : null,
                     ]);
 
                     echo $this->Form->control('rawmaterial_id', [
                         'options' => $rawmaterials,
                         'empty' => 'Choose a raw material',
                         'label' => 'Material Name',
-                        'type' => 'select'
+                        'type' => 'select',
+                        'value' => $usingFirestore ? ($materialsProduct->rawmaterial_id ?? '') : null,
                     ]);
 
-                    echo $this->Form->control('quantity');
+                    echo $this->Form->control('quantity', [
+                        'value' => $usingFirestore ? ($materialsProduct->quantity ?? '') : null,
+                    ]);
                     ?>
                 </fieldset>
                 <?= $this->Form->button(__('Update Assigned Material'), ['class' => 'btn btn-dark btn-lg']) ?>

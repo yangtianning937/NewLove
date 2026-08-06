@@ -10,13 +10,13 @@
             <h4 class="heading"><?= __('Actions') ?></h4>
             <?= $this->Html->link(__('Edit Materials Product'), ['action' => 'edit', $materialsProduct->product_id, $materialsProduct->rawmaterial_id], ['class' => 'side-nav-item']) ?>
             <?= $this->Form->postLink(__('Delete Materials Product'), ['action' => 'delete', $materialsProduct->product_id, $materialsProduct->rawmaterial_id], ['confirm' => __('Are you sure you want to delete this item?'), 'class' => 'side-nav-item']) ?>
-            <?= $this->Html->link(__('List Materials Products'), ['action' => 'index', $materialsProduct->product_id, $materialsProduct->rawmaterial_id], ['class' => 'side-nav-item']) ?>
-            <?= $this->Html->link(__('New Materials Product'), ['action' => 'add', $materialsProduct->product_id, $materialsProduct->rawmaterial_id], ['class' => 'side-nav-item']) ?>
+            <?= $this->Html->link(__('List Materials Products'), ['action' => 'index', $materialsProduct->product_id], ['class' => 'side-nav-item']) ?>
+            <?= $this->Html->link(__('New Materials Product'), ['action' => 'add', $materialsProduct->product_id], ['class' => 'side-nav-item']) ?>
         </div>
     </aside>
     <div class="column-responsive column-80">
         <div class="materialsProducts view content">
-            <h3><?= h($materialsProduct->product->name . ' - ' . $materialsProduct->rawmaterial->name) ?></h3>
+            <h3><?= h(($materialsProduct->product->name ?? 'Product') . ' - ' . ($materialsProduct->rawmaterial->name ?? 'Raw Material')) ?></h3>
             <table>
                 <tr>
                     <th><?= __('Product') ?></th>

@@ -402,6 +402,135 @@ class NewLoveFirestoreRepository
         unset($this->cache['product_inventories']);
     }
 
+    public function materialsProducts(?string $productId = null): array
+    {
+        $links = array_values($this->collectionObjects('materials_products'));
+        $products = $this->collectionObjects('products');
+        $rawmaterials = $this->collectionObjects('rawmaterials');
+
+        foreach ($links as $link) {
+            $link->product = $products[(string)$link->product_id] ?? null;
+            $link->rawmaterial = $rawmaterials[(string)$link->rawmaterial_id] ?? null;
+        }
+
+        if ($productId !== null && $productId !== '') {
+            $links = array_values(array_filter($links, function (stdClass $link) use ($productId): bool {
+                return (string)$link->product_id === (string)$productId;
+            }));
+        }
+
+        usort($links, function (stdClass $first, stdClass $second): int {
+            $productCompare = (int)$first->product_id <=> (int)$second->product_id;
+
+            if ($productCompare !== 0) {
+                return $productCompare;
+            }
+
+            return (int)$first->rawmaterial_id <=> (int)$second->rawmaterial_id;
+        });
+
+        return array_map(function (stdClass $link): array {
+            return get_object_vars($link);
+        }, $links);
+    }
+
+    public function materialsProduct(string $productId, string $rawmaterialId): ?array
+    {
+        $documentId = $this->materialsProductDocumentId($productId, $rawmaterialId);
+        $link = $this->documentObject('materials_products', $documentId);
+
+        if (
+            $link === null ||
+            (string)$link->product_id !== (string)$productId ||
+            (string)$link->rawmaterial_id !== (string)$rawmaterialId
+        ) {
+            foreach ($this->collectionObjects('materials_products') as $item) {
+                if (
+                    (string)$item->product_id === (string)$productId &&
+                    (string)$item->rawmaterial_id === (string)$rawmaterialId
+                ) {
+                    $link = $item;
+                    break;
+                }
+            }
+        }
+
+        if ($link === null) {
+            return null;
+        }
+
+        $data = get_object_vars($link);
+        $products = $this->collectionObjects('products');
+        $rawmaterials = $this->collectionObjects('rawmaterials');
+        $data['product'] = $products[(string)$link->product_id] ?? null;
+        $data['rawmaterial'] = $rawmaterials[(string)$link->rawmaterial_id] ?? null;
+
+        return $data;
+    }
+
+    public function createMaterialsProduct(array $data): array
+    {
+        $payload = $this->materialsProductPayload($data);
+        $documentId = (string)$payload['id'];
+        $saved = $this->firestore->setDocument('materials_products', $documentId, $payload);
+        unset($this->cache['materials_products']);
+
+        return $saved;
+    }
+
+    public function updateMaterialsProduct(string $productId, string $rawmaterialId, array $data): array
+    {
+        $existing = $this->materialsProduct($productId, $rawmaterialId);
+
+        if ($existing === null) {
+            throw new \RuntimeException('Materials product not found.');
+        }
+
+        $payload = $this->materialsProductPayload(array_merge($existing, $data));
+        $newDocumentId = (string)$payload['id'];
+        $oldDocumentId = (string)($existing['id'] ?? $this->materialsProductDocumentId($productId, $rawmaterialId));
+        $saved = $this->firestore->setDocument('materials_products', $newDocumentId, $payload);
+
+        if ($oldDocumentId !== $newDocumentId) {
+            $this->firestore->deleteDocument('materials_products', $oldDocumentId);
+        }
+
+        unset($this->cache['materials_products']);
+
+        return $saved;
+    }
+
+    public function deleteMaterialsProduct(string $productId, string $rawmaterialId): void
+    {
+        $existing = $this->materialsProduct($productId, $rawmaterialId);
+        $documentId = (string)($existing['id'] ?? $this->materialsProductDocumentId($productId, $rawmaterialId));
+        $this->firestore->deleteDocument('materials_products', $documentId);
+        unset($this->cache['materials_products']);
+    }
+
+    public function materialsProductExists(string $productId, string $rawmaterialId, ?string $excludeProductId = null, ?string $excludeRawmaterialId = null): bool
+    {
+        foreach ($this->collectionObjects('materials_products') as $link) {
+            if (
+                $excludeProductId !== null &&
+                $excludeRawmaterialId !== null &&
+                (string)$link->product_id === (string)$excludeProductId &&
+                (string)$link->rawmaterial_id === (string)$excludeRawmaterialId
+            ) {
+                continue;
+            }
+
+            if (
+                (string)$link->product_id === (string)$productId &&
+                (string)$link->rawmaterial_id === (string)$rawmaterialId
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function rawmaterials(?string $name, ?string $colourId, ?string $description): array
     {
         $rawmaterials = array_values($this->collectionObjects('rawmaterials'));
@@ -970,6 +1099,24 @@ class NewLoveFirestoreRepository
             'quantity' => (int)($data['quantity'] ?? 0),
             'lowStockLimit' => (int)($data['lowStockLimit'] ?? 0),
         ];
+    }
+
+    private function materialsProductPayload(array $data): array
+    {
+        $productId = $this->nullableInteger($data['product_id'] ?? null);
+        $rawmaterialId = $this->nullableInteger($data['rawmaterial_id'] ?? null);
+
+        return [
+            'id' => $this->materialsProductDocumentId((string)$productId, (string)$rawmaterialId),
+            'product_id' => $productId,
+            'rawmaterial_id' => $rawmaterialId,
+            'quantity' => (int)($data['quantity'] ?? 0),
+        ];
+    }
+
+    private function materialsProductDocumentId(string $productId, string $rawmaterialId): string
+    {
+        return $productId . '_' . $rawmaterialId;
     }
 
     private function supplierPayload(array $data, int $id): array

@@ -5,6 +5,7 @@
  * @var \Cake\Collection\CollectionInterface|string[] $products
  * @var \Cake\Collection\CollectionInterface|string[] $rawmaterials
  */
+$usingFirestore = $usingFirestore ?? false;
 ?>
 <head>
     <style>
@@ -25,7 +26,7 @@
     </aside>
     <div class="column-responsive column-80">
         <div class="materialsProducts form content">
-            <?= $this->Form->create($materialsProduct) ?>
+            <?= $this->Form->create($usingFirestore ? null : $materialsProduct) ?>
             <fieldset>
                 <h2><?= __('Add a New Material to a Product') ?></h2>
                 <legend><?= __('Fields Marked * Are Mandatory') ?></legend>
@@ -36,7 +37,8 @@
                     'options' => $products,
                     'empty' => 'Choose a product',
                     'label' => false,
-                    'type' => 'select'
+                    'type' => 'select',
+                    'value' => $usingFirestore ? ($materialsProduct->product_id ?? '') : null,
                 ]);
 
                 echo $this->Form->label('rawmaterial_id', 'Material *');
@@ -44,11 +46,15 @@
                     'options' => $rawmaterials,
                     'empty' => 'Choose a raw material',
                     'label' => false,
-                    'type' => 'select'
+                    'type' => 'select',
+                    'value' => $usingFirestore ? ($materialsProduct->rawmaterial_id ?? '') : null,
                 ]);
 
                 echo $this->Form->label('quantity', 'Quantity *');
-                echo $this->Form->control('quantity', ['label' => false]);
+                echo $this->Form->control('quantity', [
+                    'label' => false,
+                    'value' => $usingFirestore ? ($materialsProduct->quantity ?? '') : null,
+                ]);
                 ?>
             </fieldset>
 
